@@ -19,3 +19,12 @@ resource "google_service_account_iam_member" "workspace_connector_token_creator"
   role               = "roles/iam.serviceAccountTokenCreator"
   member             = "serviceAccount:${google_service_account.workspace_connector.email}"
 }
+
+# allow gcp service account to pull workspace connector image from artifact registry
+resource "google_artifact_registry_repository_iam_member" "workspace_connector_image_reader" {
+  project    = "friendly-access-450904-h1"
+  location   = "us-central1"
+  repository = "workspace-connector"
+  role       = "roles/artifactregistry.reader"
+  member     = "serviceAccount:${google_service_account.workspace_connector.email}"
+}
