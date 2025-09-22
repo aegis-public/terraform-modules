@@ -1,10 +1,10 @@
-variable "project_id" {
-  description = "GCP project ID"
+variable "email_domain" {
+  description = "Email domain"
   type        = string
 }
 
-variable "workspace_connector_http_url" {
-  description = "HTTP URL of the workspace connector"
+variable "gke_cluster_link" {
+  description = "GKE cluster selfLink"
   type        = string
 }
 
@@ -13,12 +13,16 @@ variable "kubernetes_namespace" {
   type        = string
 }
 
-variable "kubernetes_service_account" {
-  description = "Kubernetes service account"
-  type        = string
+variable "helm_values" {
+  description = "Helm values (will be merged after inferred defaults)"
+  type        = any
+  default     = {}
 }
 
-variable "workload_identity_pool" {
-  description = "GCP workload identity pool name"
-  type        = string
+variable "app_config" {
+  description = "Application configuration"
+  type = object({
+    workspace_connector_http_url = string
+    email_accounts               = list(string)
+  })
 }
