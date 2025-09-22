@@ -27,7 +27,8 @@ variable "helm_ingress_url" {
 variable "app_config" {
   description = "Application configuration"
   type = object({
-    email_accounts = list(string)
-    env            = optional(map(string))
+    email_accounts      = list(string)
+    admin_account_email = string
+    env                 = optional(map(string))
   })
 }
