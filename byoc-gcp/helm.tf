@@ -14,20 +14,22 @@ locals {
 }
 
 locals {
+  inferred_env_vars = {
+    AEGIS_ACCOUNTS                       = join(",", var.app_config.email_accounts)
+    AEGIS_GOOGLE_SERVICE_ACCOUNT_EMAIL   = google_service_account.workspace_connector.email
+    AEGIS_GOOGLE_TOPIC_GMAIL_INBOX_WATCH = google_pubsub_topic.gmail_inbox.id
+    AEGIS_AEGIS_TOPIC_MESSAGES_RECEIVED  = local.aegis_config.message_received_topic
+  }
+
   inferred_helm_values = {
     config = {
-      env = {
-        AEGIS_ACCOUNTS                       = join(",", var.app_config.email_accounts)
-        AEGIS_GOOGLE_SERVICE_ACCOUNT_EMAIL   = google_service_account.workspace_connector.email
-        AEGIS_GOOGLE_TOPIC_GMAIL_INBOX_WATCH = google_pubsub_topic.gmail_inbox.id
-        AEGIS_AEGIS_TOPIC_MESSAGES_RECEIVED  = local.aegis_config.message_received_topic
-      }
+      env = merge(local.inferred_env_vars, var.app_config.env)
     }
   }
 }
 
 resource "helm_release" "workspace_connector" {
-  name             = "workspace-connector"
+  name             = "aegis-workspace-connector"
   repository       = "https://aegis-public.github.io/helm-charts"
   chart            = "workspace-connector"
   namespace        = var.kubernetes_namespace
