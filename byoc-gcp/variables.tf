@@ -32,3 +32,11 @@ variable "app_config" {
     env                 = optional(map(string))
   })
 }
+
+##########################################################
+
+variable "gcp_service_account_id" {
+  description = "GCP Service Account ID (do not override unless you know what you're doing!)"
+  type        = string
+  default     = "aegis-workspace-connector"
+}

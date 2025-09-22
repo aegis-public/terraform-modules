@@ -1,6 +1,6 @@
 # service account for workspace connector
 resource "google_service_account" "workspace_connector" {
-  account_id   = "aegis-workspace-connector"
+  account_id   = var.gcp_service_account_id
   display_name = "Aegis Workspace Connector"
 }
 
