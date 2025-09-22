@@ -19,10 +19,14 @@ variable "helm_values" {
   default     = {}
 }
 
+variable "helm_ingress_url" {
+  description = "URL for the configured helm ingress"
+  type        = string
+}
+
 variable "app_config" {
   description = "Application configuration"
   type = object({
-    workspace_connector_http_url = string
-    email_accounts               = list(string)
+    email_accounts = list(string)
   })
 }
