@@ -29,7 +29,8 @@ variable "app_config" {
   type = object({
     email_accounts      = list(string)
     admin_account_email = string
-    env                 = optional(map(string))
+    backfill_query      = optional(string, "")
+    env                 = optional(map(string), {})
   })
 }
 

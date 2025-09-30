@@ -22,6 +22,7 @@ locals {
     AEGIS_GOOGLE_TOPIC_GMAIL_INBOX_WATCH = google_pubsub_topic.gmail_inbox.id
     AEGIS_AEGIS_TOPIC_LIVE_MESSAGES      = format(local.aegis_config.domain_topic_format, "live")
     AEGIS_AEGIS_TOPIC_BACKFILL_MESSAGES  = format(local.aegis_config.domain_topic_format, "backfill")
+    AEGIS_BACKFILL_QUERY                 = var.app_config.backfill_query
   }
 
   inferred_helm_values = {

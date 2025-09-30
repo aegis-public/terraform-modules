@@ -1,6 +1,6 @@
 ```hcl
 module "byoc_aegis" {
-  source = "github.com/aegis-public/terraform-modules.git//byoc-gcp?ref=v0.1.7"
+  source = "github.com/aegis-public/terraform-modules.git//byoc-gcp?ref=v0.1.8"
 
   # fully qualified gke cluster url
   # gcloud container clusters list --format="value(selfLink)"
@@ -32,6 +32,8 @@ module "byoc_aegis" {
     email_accounts = ["user@aegisai.ai"]
     # admin email (to list all users)
     admin_account_email = "admin@aegisai.ai"
+    # gmail search query to backfill message classifications across all accounts (optional)
+    backfill_query = "newer_than:7d"
   }
 }
 ```
