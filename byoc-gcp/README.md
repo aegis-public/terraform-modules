@@ -9,8 +9,6 @@ module "byoc_aegis" {
   # k8s namespace for the deployment
   kubernetes_namespace = "aegis-byoc"
 
-  email_domain = "aegisai.ai"
-
   helm_values = {
     # ingress config to receive pubsub push subscription events
     ingress = {
@@ -30,9 +28,9 @@ module "byoc_aegis" {
   app_config = {
     # email accounts to watch (can use ["*"] for all accounts)
     email_accounts = ["user@aegisai.ai"]
-    # admin email (to list all users)
+    email_domain = "aegisai.ai"
     admin_account_email = "admin@aegisai.ai"
-    # gmail search query to backfill message classifications across all accounts (optional)
+    # gmail search query to backfill message classifications across all accounts (optional, remove to disable backfill)
     backfill_query = "newer_than:7d"
   }
 }

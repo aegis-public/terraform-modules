@@ -1,8 +1,3 @@
-variable "email_domain" {
-  description = "Email domain"
-  type        = string
-}
-
 variable "gke_cluster_link" {
   description = "GKE cluster selfLink"
   type        = string
@@ -28,6 +23,7 @@ variable "app_config" {
   description = "Application configuration"
   type = object({
     email_accounts      = list(string)
+    email_domain        = string
     admin_account_email = string
     backfill_query      = optional(string, "")
     env                 = optional(map(string), {})
