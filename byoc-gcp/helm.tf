@@ -1,13 +1,18 @@
 locals {
   aegis_project_id = "friendly-access-450904-h1"
   aegis_config_deps = {
-    base_topic_format = "projects/%s/topics/email_messages.%s.%%s"
-    safe_email_domain = replace(var.app_config.email_domain, ".", "_")
+    base_topic_format  = "projects/%s/topics/email_messages.%s.%%s"
+    base_bucket_format = "aegis-%s-%%s"
+    safe_email_domain  = replace(var.app_config.email_domain, ".", "_")
   }
   aegis_config = {
-    domain_topic_format = format(
+    tenant_topic_format = format(
       local.aegis_config_deps.base_topic_format,
       local.aegis_project_id,
+      local.aegis_config_deps.safe_email_domain
+    )
+    tenant_bucket_format = format(
+      local.aegis_config_deps.base_bucket_format,
       local.aegis_config_deps.safe_email_domain
     )
   }
@@ -20,8 +25,9 @@ locals {
     AEGIS_GOOGLE_ADMIN_ACCOUNT_EMAIL     = var.app_config.admin_account_email
     AEGIS_GOOGLE_EMAIL_DOMAIN            = var.app_config.email_domain
     AEGIS_GOOGLE_TOPIC_GMAIL_INBOX_WATCH = google_pubsub_topic.gmail_inbox.id
-    AEGIS_AEGIS_TOPIC_LIVE_MESSAGES      = format(local.aegis_config.domain_topic_format, "live")
-    AEGIS_AEGIS_TOPIC_BACKFILL_MESSAGES  = format(local.aegis_config.domain_topic_format, "backfill")
+    AEGIS_GOOGLE_BUCKET_LARGE_MESSAGES   = format(local.aegis_config.tenant_bucket_format, "large-messages")
+    AEGIS_AEGIS_TOPIC_LIVE_MESSAGES      = format(local.aegis_config.tenant_topic_format, "live")
+    AEGIS_AEGIS_TOPIC_BACKFILL_MESSAGES  = format(local.aegis_config.tenant_topic_format, "backfill")
     AEGIS_BACKFILL_QUERY                 = var.app_config.backfill_query
   }
 
