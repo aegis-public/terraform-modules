@@ -25,9 +25,9 @@ locals {
     AEGIS_GOOGLE_ADMIN_ACCOUNT_EMAIL     = var.app_config.admin_account_email
     AEGIS_GOOGLE_EMAIL_DOMAIN            = var.app_config.email_domain
     AEGIS_GOOGLE_TOPIC_GMAIL_INBOX_WATCH = google_pubsub_topic.gmail_inbox.id
-    AEGIS_GOOGLE_BUCKET_LARGE_MESSAGES   = format(local.aegis_config.tenant_bucket_format, "large-messages")
     AEGIS_AEGIS_TOPIC_LIVE_MESSAGES      = format(local.aegis_config.tenant_topic_format, "live")
     AEGIS_AEGIS_TOPIC_BACKFILL_MESSAGES  = format(local.aegis_config.tenant_topic_format, "backfill")
+    AEGIS_AEGIS_BUCKET_LARGE_MESSAGES   = format(local.aegis_config.tenant_bucket_format, "large-messages")
     AEGIS_BACKFILL_QUERY                 = var.app_config.backfill_query
   }
 
