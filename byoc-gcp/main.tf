@@ -12,7 +12,7 @@ data "google_container_cluster" "primary" {
 }
 
 locals {
-  kubernetes_service_account = helm_release.workspace_connector.name
+  kubernetes_service_account = local.helm_release_name
   workload_identity_pool     = data.google_container_cluster.primary.workload_identity_config[0].workload_pool
 }
 
