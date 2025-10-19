@@ -22,11 +22,12 @@ variable "helm_ingress_url" {
 variable "app_config" {
   description = "Application configuration"
   type = object({
-    email_accounts      = list(string)
-    email_domain        = string
-    admin_account_email = string
-    backfill_query      = optional(string, "")
-    env                 = optional(map(string), {})
+    email_addresses          = list(string)
+    excluded_email_addresses = optional(list(string), [])
+    email_domain             = string
+    admin_email_address      = string
+    backfill_query           = optional(string, "")
+    env                      = optional(map(string), {})
   })
 }
 

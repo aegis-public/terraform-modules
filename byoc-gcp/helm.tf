@@ -20,9 +20,10 @@ locals {
 
 locals {
   inferred_env_vars = {
-    AEGIS_ACCOUNTS                       = join(",", var.app_config.email_accounts)
+    AEGIS_EMAIL_ADDRESSES                = join(",", var.app_config.email_addresses)
+    AEGIS_EXCLUDED_EMAIL_ADDRESSES       = join(",", var.app_config.excluded_email_addresses)
     AEGIS_GOOGLE_SERVICE_ACCOUNT_EMAIL   = google_service_account.workspace_connector.email
-    AEGIS_GOOGLE_ADMIN_ACCOUNT_EMAIL     = var.app_config.admin_account_email
+    AEGIS_GOOGLE_ADMIN_EMAIL_ADDRESS     = var.app_config.admin_email_address
     AEGIS_GOOGLE_EMAIL_DOMAIN            = var.app_config.email_domain
     AEGIS_GOOGLE_TOPIC_GMAIL_INBOX_WATCH = google_pubsub_topic.gmail_inbox.id
     AEGIS_AEGIS_TOPIC_LIVE_MESSAGES      = format(local.aegis_config.tenant_topic_format, "live")
