@@ -22,13 +22,34 @@ variable "helm_ingress_url" {
 variable "app_config" {
   description = "Application configuration"
   type = object({
+    workspace_kind           = string
     email_addresses          = list(string)
     excluded_email_addresses = optional(list(string), [])
     email_domain             = string
     admin_email_address      = string
     backfill_query           = optional(string, "")
     env                      = optional(map(string), {})
+    google_workspace_config  = optional(object({
+      admin_email_address = string
+    }), null)
+    microsoft_workspace_config = optional(object({
+      tenant_id     = string
+      client_id     = string
+      client_secret = optional(string, "")
+    }), null)
   })
+  validation {
+    condition = contains(["google", "microsoft"], var.app_config.workspace_kind)
+    error_message = "workspace_kind must be either google or microsoft"
+  }
+  validation {
+    condition = var.app_config.workspace_kind == "google" ? var.app_config.google_workspace_config != null : true
+    error_message = "google_workspace_config must be provided if workspace_kind is google"
+  }
+  validation {
+    condition = var.app_config.workspace_kind == "microsoft" ? var.app_config.microsoft_workspace_config != null : true
+    error_message = "microsoft_workspace_config must be provided if workspace_kind is microsoft"
+  }
 }
 
 ##########################################################
