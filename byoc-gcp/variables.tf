@@ -26,7 +26,6 @@ variable "app_config" {
     email_addresses          = list(string)
     excluded_email_addresses = optional(list(string), [])
     email_domain             = string
-    admin_email_address      = string
     backfill_query           = optional(string, "")
     env                      = optional(map(string), {})
     google_workspace_config  = optional(object({
