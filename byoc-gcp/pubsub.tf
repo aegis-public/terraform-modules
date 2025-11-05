@@ -20,6 +20,12 @@ resource "google_pubsub_subscription" "gmail_inbox_messages_received" {
       service_account_email = google_service_account.workspace_connector.email
     }
   }
+
+  retry_policy {
+    minimum_backoff = "30s"
+    maximum_backoff = "600s"
+  }
+
 }
 
 # permission for system gmail service account to publish to the topic
