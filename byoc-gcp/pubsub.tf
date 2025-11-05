@@ -9,7 +9,7 @@ resource "google_pubsub_subscription" "gmail_inbox_messages_received" {
   name  = "aegis-gmail-inbox-messages-received"
   topic = google_pubsub_topic.gmail_inbox.name
 
-  ack_deadline_seconds = 10
+  ack_deadline_seconds = 600
 
   push_config {
     push_endpoint = "${var.helm_ingress_url}/google/message_received"
