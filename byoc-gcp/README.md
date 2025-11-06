@@ -23,7 +23,7 @@ module "byoc_aegis" {
   }
 
   # ingress URL to create pubsub push subscriptions
-  helm_ingress_url = "https://customer-domain.com/aegis-workspace-connector"
+  helm_ingress_url = "https://mycompany.com/aegis-workspace-connector"
 
   app_config = {
     workspace_kind = "google"
