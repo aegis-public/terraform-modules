@@ -20,6 +20,8 @@ locals {
 
 locals {
   inferred_env_vars = {
+    AEGIS_READ_ONLY_MODE = var.app_config.read_only_mode ? "true" : "false"
+
     AEGIS_EMAIL_ADDRESSES          = join(",", var.app_config.email_addresses)
     AEGIS_EXCLUDED_EMAIL_ADDRESSES = join(",", var.app_config.excluded_email_addresses)
 
