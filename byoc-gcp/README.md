@@ -1,8 +1,13 @@
+Aegis workspace-connector can be installed using this terraform module.  
+This module communicates with your e-mail provider to fetch messages & apply quarantine labels in response to classification results from Aegis.
+
+Note: all terraform variables specified here are required, and must be configured as per your environment.
+
 ```hcl
 module "byoc_aegis" {
   source = "github.com/aegis-public/terraform-modules.git//byoc-gcp?ref=v0.1.10"
 
-  # fully qualified gke cluster url
+  # fully qualified url for gke cluster (with workload identity federation enabled)
   # gcloud container clusters list --format="value(selfLink)"
   gke_cluster_link = "https://container.googleapis.com/v1/projects/mycompany/zones/us-central1-a/clusters/mycluster"
 
@@ -53,8 +58,8 @@ Also available under `Advanced Settings` for the service account in GCP console 
 Scopes:
 
 `https://www.googleapis.com/auth/gmail.readonly`  
-`https://www.googleapis.com/auth/gmail.modify`  
-`https://www.googleapis.com/auth/admin.directory.user.readonly`  
+`https://www.googleapis.com/auth/gmail.modify`                  required if `read_only_mode = false` (default)  
+`https://www.googleapis.com/auth/admin.directory.user.readonly` required if `email_addresses = ["*"]`  
 
 
 Google Admin Console: https://admin.google.com/u/0/ac/owl/domainwidedelegation
