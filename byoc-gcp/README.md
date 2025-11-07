@@ -49,7 +49,7 @@ module "byoc_aegis" {
 
 In addition, to authorize privileged Gmail actions (listing users, fetching emails, modifying labels) you must manually grant Domain-wide Delegation permission to the generated service account from the Google Admin Console.
 
-<img src="https://github.com/user-attachments/assets/aba7e149-f453-4e0d-ab2b-556f2a460397" width="400" alt="screenshot" />
+<img src="https://i.postimg.cc/WN8ydqrZ/495848066-aba7e149-f453-4e0d-ab2b-556f2a460397.png" width="400" alt="screenshot" />
 
 Client ID: Available in terraform output - `module.byoc_aegis.service_account_oauth_client_id`
 
