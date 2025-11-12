@@ -22,6 +22,10 @@ locals {
   inferred_env_vars = {
     AEGIS_READ_ONLY_MODE = var.app_config.read_only_mode ? "true" : "false"
 
+    AEGIS_DATABASE_URL = var.database.url != null ? var.database.url : (
+      "postgresql://default:${module.sql_db[0].generated_user_password}@localhost:5432/default?sslmode=disable"
+    )
+
     AEGIS_EMAIL_ADDRESSES          = join(",", var.app_config.email_addresses)
     AEGIS_EXCLUDED_EMAIL_ADDRESSES = join(",", var.app_config.excluded_email_addresses)
 
@@ -58,17 +62,22 @@ resource "helm_release" "workspace_connector" {
   name             = local.helm_release_name
   repository       = "https://aegis-public.github.io/helm-charts"
   chart            = "workspace-connector"
-  version          = "0.1.21"
+  version          = "0.1.22-beta.2"
   namespace        = var.kubernetes_namespace
   create_namespace = true
 
-  set = [{
-    name  = "serviceAccount.workloadIdentity.gcpServiceAccount"
-    value = google_service_account.workspace_connector.email
-  }]
-
   values = [
     yamlencode(local.inferred_helm_values),
+    yamlencode({
+      serviceAccount = {
+        workloadIdentity = {
+          gcpServiceAccount = google_service_account.workspace_connector.email
+        }
+      }
+      cloudSql = {
+        instanceConnectionName = var.database.create ? module.sql_db[0].instance_connection_name : null
+      }
+    }),
     yamlencode(var.helm_values),
   ]
 

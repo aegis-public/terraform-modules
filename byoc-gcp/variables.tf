@@ -19,6 +19,25 @@ variable "helm_ingress_url" {
   type        = string
 }
 
+variable "database_url" {
+  description = "Database URL"
+  type        = string
+  default     = null
+}
+
+variable "database" {
+  description = "Database configuration"
+  type = object({
+    url = optional(string, null)
+    create = optional(bool, true)
+  })
+  default = {}
+  validation {
+    condition     = var.database.create || var.database.url != null
+    error_message = "database.url must be provided when database.create is false"
+  }
+}
+
 variable "app_config" {
   description = "Application configuration"
   type = object({
@@ -29,7 +48,7 @@ variable "app_config" {
     email_domain             = string
     backfill_query           = optional(string, "")
     env                      = optional(map(string), {})
-    google_workspace_config  = optional(object({
+    google_workspace_config = optional(object({
       admin_email_address = string
     }), null)
     microsoft_workspace_config = optional(object({
@@ -39,15 +58,15 @@ variable "app_config" {
     }), null)
   })
   validation {
-    condition = contains(["google", "microsoft"], var.app_config.workspace_kind)
+    condition     = contains(["google", "microsoft"], var.app_config.workspace_kind)
     error_message = "workspace_kind must be either google or microsoft"
   }
   validation {
-    condition = var.app_config.workspace_kind == "google" ? var.app_config.google_workspace_config != null : true
+    condition     = var.app_config.workspace_kind == "google" ? var.app_config.google_workspace_config != null : true
     error_message = "google_workspace_config must be provided if workspace_kind is google"
   }
   validation {
-    condition = var.app_config.workspace_kind == "microsoft" ? var.app_config.microsoft_workspace_config != null : true
+    condition     = var.app_config.workspace_kind == "microsoft" ? var.app_config.microsoft_workspace_config != null : true
     error_message = "microsoft_workspace_config must be provided if workspace_kind is microsoft"
   }
 }
