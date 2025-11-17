@@ -44,6 +44,7 @@ locals {
     AEGIS_AEGIS_TOPIC_LIVE_MESSAGES     = format(local.aegis_config.tenant_topic_format, "live")
     AEGIS_AEGIS_TOPIC_BACKFILL_MESSAGES = format(local.aegis_config.tenant_topic_format, "backfill")
     AEGIS_AEGIS_BUCKET_LARGE_MESSAGES   = format(local.aegis_config.tenant_bucket_format, "large-messages")
+    AEGIS_AEGIS_BUCKET_RAW_EMLS         = format(local.aegis_config.tenant_bucket_format, "raw-emls")
     AEGIS_BACKFILL_QUERY                = var.app_config.backfill_query
   }
 
