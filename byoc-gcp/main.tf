@@ -2,6 +2,9 @@
 resource "google_service_account" "workspace_connector" {
   account_id   = var.gcp_service_account_id
   display_name = "Aegis Workspace Connector"
+  lifecycle {
+    ignore_changes = [display_name, description]
+  }
 }
 
 data "google_container_cluster" "primary" {
