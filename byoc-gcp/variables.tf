@@ -45,8 +45,7 @@ variable "app_config" {
     workspace_kind           = string
     email_addresses          = list(string)
     excluded_email_addresses = optional(list(string), [])
-    email_domain             = optional(string)      # Legacy single domain (deprecated)
-    email_domains            = optional(list(string))  # New multi-domain support
+    email_domains            = list(string)
     backfill_query           = optional(string, "")
     env                      = optional(map(string), {})
     google_workspace_config = optional(object({
@@ -71,11 +70,8 @@ variable "app_config" {
     error_message = "microsoft_workspace_config must be provided if workspace_kind is microsoft"
   }
   validation {
-    condition = (
-      (var.app_config.email_domain != null && var.app_config.email_domains == null) ||
-      (var.app_config.email_domain == null && var.app_config.email_domains != null)
-    )
-    error_message = "Must specify either email_domain (singular) or email_domains (plural), but not both."
+    condition = length(var.app_config.email_domains) > 0
+    error_message = "must specify at least one email domain"
   }
 }
 
