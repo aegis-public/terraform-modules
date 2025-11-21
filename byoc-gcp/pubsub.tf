@@ -12,7 +12,7 @@ resource "google_pubsub_subscription" "gmail_inbox_messages_received" {
   ack_deadline_seconds = 600
 
   push_config {
-    push_endpoint = "${var.helm_ingress_url}/google/message_received"
+    push_endpoint = "${var.helm_ingress_url}/public/google/message_received"
     no_wrapper {
       write_metadata = true
     }
