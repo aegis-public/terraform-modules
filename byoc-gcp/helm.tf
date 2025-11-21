@@ -1,27 +1,19 @@
 locals {
   aegis_project_id = "friendly-access-450904-h1"
 
-  # Normalize to always use email_domains internally
-  # Support both legacy email_domain (singular) and new email_domains (plural)
-  normalized_email_domains = var.app_config.email_domains != null ? var.app_config.email_domains : (
-    var.app_config.email_domain != null ? [var.app_config.email_domain] : []
-  )
-  primary_email_domain = length(local.normalized_email_domains) > 0 ? local.normalized_email_domains[0] : ""
-
   aegis_config_deps = {
     base_topic_format  = "projects/%s/topics/email_messages.%s.%%s"
     base_bucket_format = "aegis-%s-%%s"
-    safe_email_domain  = replace(local.primary_email_domain, ".", "_")
   }
   aegis_config = {
     tenant_topic_format = format(
       local.aegis_config_deps.base_topic_format,
       local.aegis_project_id,
-      local.aegis_config_deps.safe_email_domain
+      var.aegis_tenant_id
     )
     tenant_bucket_format = format(
       local.aegis_config_deps.base_bucket_format,
-      local.aegis_config_deps.safe_email_domain
+      var.aegis_tenant_id
     )
   }
 }
@@ -38,8 +30,7 @@ locals {
     AEGIS_EXCLUDED_EMAIL_ADDRESSES = join(",", var.app_config.excluded_email_addresses)
 
     AEGIS_WORKSPACE_KIND  = var.app_config.workspace_kind
-    AEGIS_EMAIL_DOMAIN    = local.primary_email_domain  # Legacy support (first domain)
-    AEGIS_EMAIL_DOMAINS   = join(",", local.normalized_email_domains)  # New multi-domain support
+    AEGIS_EMAIL_DOMAINS   = join(",", var.app_config.email_domains)
     AEGIS_BASE_URL        = var.helm_ingress_url
 
     AEGIS_GOOGLE_SERVICE_ACCOUNT_EMAIL   = google_service_account.workspace_connector.email
