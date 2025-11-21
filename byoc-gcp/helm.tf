@@ -65,6 +65,7 @@ locals {
 
 locals {
   helm_release_name = "aegis-workspace-connector"
+  helm_values = merge(local.inferred_helm_values, var.helm_values)
 }
 
 resource "helm_release" "workspace_connector" {
@@ -75,23 +76,14 @@ resource "helm_release" "workspace_connector" {
   namespace        = var.kubernetes_namespace
   create_namespace = true
 
-  values = [
-    yamlencode(local.inferred_helm_values),
-    yamlencode({
-      serviceAccount = {
-        workloadIdentity = {
-          gcpServiceAccount = google_service_account.workspace_connector.email
-        }
-      }
-      cloudSql = {
-        instanceConnectionName = var.database.create ? module.sql_db[0].instance_connection_name : null
-      }
-    }),
-    yamlencode(var.helm_values),
-  ]
+  set = concat([{
+    name = "serviceAccount.workloadIdentity.gcpServiceAccount"
+    value = google_service_account.workspace_connector.email
+  }], var.database.create ? [{
+    name = "cloudSql.instanceConnectionName"
+    value = module.sql_db[0].instance_connection_name
+  }] : [])
 
-  depends_on = [
-    google_service_account_iam_member.workspace_connector_wif,
-    google_service_account_iam_member.workspace_connector_token_creator,
-  ]
+  values = [yamlencode(local.helm_values)]
+
 }
