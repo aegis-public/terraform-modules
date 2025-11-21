@@ -1,3 +1,8 @@
+variable "aegis_tenant_id" {
+  description = "Aegis tenant identifier"
+  type        = string
+}
+
 variable "gke_cluster_link" {
   description = "GKE cluster selfLink"
   type        = string

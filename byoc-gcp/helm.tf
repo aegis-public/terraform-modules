@@ -4,17 +4,16 @@ locals {
   aegis_config_deps = {
     base_topic_format  = "projects/%s/topics/email_messages.%s.%%s"
     base_bucket_format = "aegis-%s-%%s"
-    safe_primary_email_domain  = replace(var.app_config.email_domains[0], ".", "_")
   }
   aegis_config = {
     tenant_topic_format = format(
       local.aegis_config_deps.base_topic_format,
       local.aegis_project_id,
-      local.aegis_config_deps.safe_primary_email_domain
+      var.aegis_tenant_id
     )
     tenant_bucket_format = format(
       local.aegis_config_deps.base_bucket_format,
-      local.aegis_config_deps.safe_primary_email_domain
+      var.aegis_tenant_id
     )
   }
 }
