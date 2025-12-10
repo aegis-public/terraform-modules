@@ -55,6 +55,11 @@ variable "app_config" {
     env                      = optional(map(string), {})
     google_workspace_config = optional(object({
       admin_email_address = string
+      gmail_label_names = optional(object({
+        spam      = string
+        phishing  = string
+        promotion = string
+      }), null)
     }), null)
     microsoft_workspace_config = optional(object({
       tenant_id     = string
