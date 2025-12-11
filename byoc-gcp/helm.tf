@@ -41,6 +41,7 @@ locals {
     AEGIS_MICROSOFT_TENANT_ID     = try(var.app_config.microsoft_workspace_config.tenant_id, null)
     AEGIS_MICROSOFT_CLIENT_ID     = try(var.app_config.microsoft_workspace_config.client_id, null)
     AEGIS_MICROSOFT_CLIENT_SECRET = try(var.app_config.microsoft_workspace_config.client_secret, null)
+    AEGIS_MICROSOFT_CLIENT_STATE  = try(var.app_config.microsoft_workspace_config.client_state, null)
 
     AEGIS_AEGIS_TOPIC_LIVE_MESSAGES     = format(local.aegis_config.tenant_topic_format, "live")
     AEGIS_AEGIS_TOPIC_BACKFILL_MESSAGES = format(local.aegis_config.tenant_topic_format, "backfill")

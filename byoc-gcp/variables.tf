@@ -33,7 +33,7 @@ variable "database_url" {
 variable "database" {
   description = "Database configuration"
   type = object({
-    url = optional(string, null)
+    url    = optional(string, null)
     create = optional(bool, true)
   })
   default = {}
@@ -64,6 +64,7 @@ variable "app_config" {
     microsoft_workspace_config = optional(object({
       tenant_id     = string
       client_id     = string
+      client_state  = string
       client_secret = optional(string, "")
     }), null)
   })
@@ -80,7 +81,7 @@ variable "app_config" {
     error_message = "microsoft_workspace_config must be provided if workspace_kind is microsoft"
   }
   validation {
-    condition = length(var.app_config.email_domains) > 0
+    condition     = length(var.app_config.email_domains) > 0
     error_message = "must specify at least one email domain"
   }
 }
