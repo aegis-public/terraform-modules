@@ -1,0 +1,58 @@
+[
+  {"name": "message_id", "type": "STRING", "mode": "REQUIRED"},
+  {"name": "email_address", "type": "STRING", "mode": "REQUIRED"},
+  {"name": "sender", "type": "RECORD", "fields": [
+    {"name": "display_name", "type": "STRING"},
+    {"name": "email", "type": "STRING"},
+    {"name": "domain", "type": "RECORD", "fields": [{"name": "domain", "type": "STRING"}]}
+  ]},
+  {"name": "original_sender", "type": "RECORD", "fields": [
+    {"name": "display_name", "type": "STRING"},
+    {"name": "email", "type": "STRING"},
+    {"name": "domain", "type": "RECORD", "fields": [{"name": "domain", "type": "STRING"}]},
+    {"name": "source", "type": "STRING"}
+  ]},
+  {"name": "all_recipients", "type": "RECORD", "mode": "REPEATED", "fields": [
+    {"name": "display_name", "type": "STRING"},
+    {"name": "email", "type": "STRING"},
+    {"name": "domain", "type": "RECORD", "fields": [{"name": "domain", "type": "STRING"}]},
+    {"name": "type", "type": "STRING"}
+  ]},
+  {"name": "subject", "type": "RECORD", "fields": [{"name": "subject", "type": "STRING"}]},
+  {"name": "headers", "type": "RECORD", "fields": [
+    {"name": "raw", "type": "STRING"},
+    {"name": "processed", "type": "JSON"}
+  ]},
+  {"name": "classification", "type": "RECORD", "fields": [
+    {"name": "result", "type": "STRING"},
+    {"name": "risk_score", "type": "INT64"},
+    {"name": "explanation", "type": "STRING"},
+    {"name": "indicators", "type": "STRING", "mode": "REPEATED"}
+  ]},
+  {"name": "auth_results", "type": "RECORD", "mode": "REPEATED", "fields": [
+    {"name": "spf", "type": "RECORD", "fields": [
+      {"name": "result", "type": "STRING"},
+      {"name": "reason", "type": "STRING"}
+    ]},
+    {"name": "dkim", "type": "RECORD", "mode": "REPEATED", "fields": [
+      {"name": "result", "type": "STRING"},
+      {"name": "reason", "type": "STRING"}
+    ]},
+    {"name": "dmarc", "type": "RECORD", "fields": [
+      {"name": "result", "type": "STRING"},
+      {"name": "reason", "type": "STRING"}
+    ]}
+  ]},
+  {"name": "urls", "type": "RECORD", "mode": "REPEATED", "fields": [
+    {"name": "display_name", "type": "STRING"},
+    {"name": "original", "type": "STRING"},
+    {"name": "derived", "type": "RECORD", "mode": "REPEATED", "fields": [{"name": "url", "type": "STRING"}]},
+    {"name": "domain", "type": "RECORD", "fields": [{"name": "domain", "type": "STRING"}]}
+  ]},
+  {"name": "attachments", "type": "RECORD", "mode": "REPEATED", "fields": [
+    {"name": "file_name", "type": "STRING"},
+    {"name": "sha256", "type": "STRING"}
+  ]},
+  {"name": "received_at", "type": "TIMESTAMP", "mode": "REQUIRED"},
+  {"name": "processed_at", "type": "TIMESTAMP", "mode": "REQUIRED"}
+]

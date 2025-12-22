@@ -93,3 +93,13 @@ variable "gcp_service_account_id" {
   type        = string
   default     = "aegis-workspace-connector"
 }
+
+variable "lakehouse_config" {
+  description = "Lakehouse streaming configuration"
+  type = object({
+    enabled = optional(bool, false)
+  })
+  default = {
+    enabled = false
+  }
+}
