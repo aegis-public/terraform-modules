@@ -2,45 +2,24 @@
 
 This repository contains reusable Terraform module definitions for the Aegis AI Security Platform infrastructure.
 
-## Important: This is NOT a Customer-Facing Repository
+## Usage
 
-**These modules are internal Aegis infrastructure components.** The module definitions here are referenced by Aegis's internal tenant configuration files (`infra/live/connector/{tenant}.tf`), not deployed directly by customers.
+This module is used by BYOC (Bring Your Own Cloud) customers to deploy Aegis infrastructure in their own GCP projects. Aegis also uses this module internally to manage tenant deployments.
 
 ### How It Works
 
-```
-aegis-public/terraform-modules/byoc-gcp/         <-- Module definition (this repo)
-         ^
-         |  (referenced via git source)
-         |
-reasonable-security/infra/live/connector/        <-- Tenant configurations
-    aegis.tf
-    jupiter.tf
-    reasonablesecurityai.tf   <-- Staging tenant for testing
-    ...
-```
-
-Each tenant `.tf` file in `infra/live/connector/` references this module with a specific version tag:
+Reference the module in your Terraform configuration:
 
 ```hcl
-module "connector_jupiter" {
+module "aegis_byoc" {
   source = "github.com/aegis-public/terraform-modules.git//byoc-gcp?ref=v0.1.16"
 
-  aegis_tenant_id        = "jupiter"
+  aegis_tenant_id        = "mycompany"
   gcp_service_account_id = "lighthouse"
-  kubernetes_namespace   = "jupiter"
+  kubernetes_namespace   = "mycompany"
   # ... other tenant-specific variables
 }
 ```
-
-### A Note on Naming
-
-The module is named `byoc-gcp` (Bring Your Own Cloud - GCP) while the live configuration directory is `infra/live/connector/`. This naming difference is intentional:
-
-- **`byoc-gcp`**: Describes what the module provisions - BYOC tenant infrastructure on GCP
-- **`connector`**: Describes the deployment pattern - these tenants use the workspace-connector service for email ingestion
-
-Both names are correct for their context. The module name reflects the infrastructure pattern, while the directory name reflects the service architecture.
 
 ## Repository Structure
 
@@ -97,12 +76,10 @@ git push origin main --tags
 
 ### 3. Test with Staging Tenant
 
-Update the staging tenant (`reasonablesecurityai`) to use the new version:
+Update a staging tenant to use the new version:
 
 ```bash
-cd ~/path/to/reasonable-security/infra/live/connector
-
-# Edit reasonablesecurityai.tf - update the module source ref
+# Edit tenant .tf file - update the module source ref
 # Change: ref=v0.1.16 -> ref=v0.2.0
 
 terraform init -upgrade  # Fetch new module version
@@ -110,15 +87,15 @@ terraform plan           # Review changes carefully
 terraform apply          # Apply after approval
 ```
 
-Verify the changes work correctly with `reasonablesecurityai` before rolling out to other tenants.
+Verify the changes work correctly before rolling out to other tenants.
 
 ### 4. Roll Out to Production Tenants
 
 After validating with the staging tenant, update production tenants incrementally:
 
 ```bash
-# Update other tenant files to use the new version
-# Edit jupiter.tf, aegis.tf, etc. - change ref=v0.1.16 -> ref=v0.2.0
+# Update tenant files to use the new version
+# Change ref=v0.1.16 -> ref=v0.2.0
 
 terraform plan   # Review all changes
 terraform apply  # Apply after approval
@@ -145,7 +122,7 @@ This repository uses [Semantic Versioning](https://semver.org/):
 
 | Variable | Type | Required | Description |
 |----------|------|----------|-------------|
-| `aegis_tenant_id` | string | yes | Short tenant identifier (e.g., "jupiter") |
+| `aegis_tenant_id` | string | yes | Short tenant identifier (e.g., "mycompany") |
 | `gcp_service_account_id` | string | yes | GCP service account ID (typically "lighthouse") |
 | `gke_cluster_link` | string | yes | Fully qualified GKE cluster URL |
 | `kubernetes_namespace` | string | yes | K8s namespace for deployment |
@@ -162,12 +139,6 @@ This repository uses [Semantic Versioning](https://semver.org/):
 | `pubsub_live_topic` | Live messages Pub/Sub topic name |
 | `pubsub_backfill_topic` | Backfill messages Pub/Sub topic name |
 | `pubsub_classified_topic` | Classified messages Pub/Sub topic name |
-
-## Related Documentation
-
-- [BYOC Tenant Onboarding](../CLAUDE.md#onboarding-new-byoc-tenants) - Full onboarding process in reasonable-security repo
-- [workspace-connector](../workspace-connector/) - BYOC email ingestion service
-- [Lighthouse](../lighthouse/) - Email classification service
 
 ## Support
 
