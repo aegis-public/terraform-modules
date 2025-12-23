@@ -59,7 +59,7 @@ resource "google_pubsub_topic" "lakehouse_flagged_dlq" {
   count = local.lakehouse_enabled ? 1 : 0
 
   name                       = "lakehouse-flagged-dlq"
-  message_retention_duration = "864000s" # 10 days
+  message_retention_duration = "86400s" # 1 days
 }
 
 # -----------------------------------------------------------------------------
