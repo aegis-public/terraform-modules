@@ -108,9 +108,21 @@ This repository uses [Semantic Versioning](https://semver.org/):
 - **MINOR** (v0.1.0 -> v0.2.0): New features, backward compatible
 - **PATCH** (v0.1.0 -> v0.1.1): Bug fixes, backward compatible
 
+### Tags vs Releases
+
+**Tags** are git pointers to specific commits. Terraform modules only need tags to work:
+
+```hcl
+source = "github.com/aegis-public/terraform-modules.git//byoc-gcp?ref=v0.1.17"
+```
+
+Terraform fetches the code at that tag - it doesn't use GitHub Releases.
+
+**Releases** are a GitHub UI feature built on top of tags. They provide a nice changelog page and "Latest" badge, but are optional for Terraform modules.
+
 ### Version History
 
-See [releases](https://github.com/aegis-public/terraform-modules/releases) for the full version history.
+See [available tags](https://github.com/aegis-public/terraform-modules/tags) for all versions.
 
 ## Module Reference
 
