@@ -12,7 +12,7 @@ Reference the module in your Terraform configuration:
 
 ```hcl
 module "aegis_byoc" {
-  source = "github.com/aegis-public/terraform-modules.git//byoc-gcp?ref=v0.1.16"
+  source = "github.com/aegis-public/terraform-modules.git//byoc-gcp?ref=vX.Y.Z"
 
   aegis_tenant_id        = "mycompany"
   gcp_service_account_id = "lighthouse"
@@ -67,10 +67,9 @@ cd ~/path/to/aegis-public/terraform-modules
 ### 2. Commit and Tag
 
 ```bash
-cd ~/path/to/aegis-public/terraform-modules
-git add byoc-gcp/lakehouse.tf byoc-gcp/variables.tf byoc-gcp/schemas/
-git commit -m "Add lakehouse streaming infrastructure"
-git tag v0.2.0  # Use semantic versioning
+git add .
+git commit -m "Your commit message"
+git tag vX.Y.Z  # Use semantic versioning
 git push origin main --tags
 ```
 
@@ -80,7 +79,7 @@ Update a staging tenant to use the new version:
 
 ```bash
 # Edit tenant .tf file - update the module source ref
-# Change: ref=v0.1.16 -> ref=v0.2.0
+# Update the ref to the new version
 
 terraform init -upgrade  # Fetch new module version
 terraform plan           # Review changes carefully
@@ -111,10 +110,7 @@ This repository uses [Semantic Versioning](https://semver.org/):
 
 ### Version History
 
-| Version | Description |
-|---------|-------------|
-| v0.2.0  | Add lakehouse streaming infrastructure (BigQuery) |
-| v0.1.16 | Current stable version |
+See [releases](https://github.com/aegis-public/terraform-modules/releases) for the full version history.
 
 ## Module Reference
 
