@@ -46,8 +46,11 @@
   {"name": "urls", "type": "RECORD", "mode": "REPEATED", "fields": [
     {"name": "display_name", "type": "STRING"},
     {"name": "original", "type": "STRING"},
-    {"name": "derived", "type": "RECORD", "mode": "REPEATED", "fields": [{"name": "url", "type": "STRING"}]},
-    {"name": "domain", "type": "RECORD", "fields": [{"name": "domain", "type": "STRING"}]}
+    {"name": "derived", "type": "RECORD", "mode": "REPEATED", "fields": [
+      {"name": "url", "type": "STRING"},
+      {"name": "domain", "type": "RECORD", "fields": [{"name": "domain", "type": "STRING"}]}
+    ]},
+    {"name": "final_domain", "type": "RECORD", "fields": [{"name": "domain", "type": "STRING"}]}
   ]},
   {"name": "attachments", "type": "RECORD", "mode": "REPEATED", "fields": [
     {"name": "file_name", "type": "STRING"},
