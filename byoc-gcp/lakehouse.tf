@@ -8,8 +8,9 @@ data "google_project" "current" {
 }
 
 locals {
-  lakehouse_enabled    = var.lakehouse_config.enabled
-  lakehouse_project_id = local.lakehouse_enabled ? data.google_project.current[0].project_id : null
+  lakehouse_enabled       = var.lakehouse_config.enabled
+  lakehouse_project_id    = local.lakehouse_enabled ? data.google_project.current[0].project_id : null
+  lakehouse_project_number = local.lakehouse_enabled ? data.google_project.current[0].number : null
 }
 
 # -----------------------------------------------------------------------------
@@ -66,6 +67,15 @@ resource "google_pubsub_topic" "lakehouse_flagged_dlq" {
 # BigQuery Subscription (Pub/Sub → BQ direct write)
 # -----------------------------------------------------------------------------
 
+# Grant Pub/Sub service agent permission to write to BigQuery
+resource "google_bigquery_dataset_iam_member" "pubsub_bq_writer" {
+  count = local.lakehouse_enabled ? 1 : 0
+
+  dataset_id = google_bigquery_dataset.lakehouse_reporting[0].dataset_id
+  role       = "roles/bigquery.dataEditor"
+  member     = "serviceAccount:service-${local.lakehouse_project_number}@gcp-sa-pubsub.iam.gserviceaccount.com"
+}
+
 resource "google_pubsub_subscription" "lakehouse_flagged_bq" {
   count = local.lakehouse_enabled ? 1 : 0
 
@@ -74,6 +84,7 @@ resource "google_pubsub_subscription" "lakehouse_flagged_bq" {
 
   bigquery_config {
     table               = "${local.lakehouse_project_id}.${google_bigquery_dataset.lakehouse_reporting[0].dataset_id}.${google_bigquery_table.lakehouse_flagged[0].table_id}"
+    use_table_schema    = true
     drop_unknown_fields = true
     write_metadata      = false
   }
@@ -82,6 +93,8 @@ resource "google_pubsub_subscription" "lakehouse_flagged_bq" {
     dead_letter_topic     = google_pubsub_topic.lakehouse_flagged_dlq[0].id
     max_delivery_attempts = 5
   }
+
+  depends_on = [google_bigquery_dataset_iam_member.pubsub_bq_writer]
 }
 
 # Pull subscription for DLQ monitoring
@@ -104,5 +117,5 @@ resource "google_pubsub_topic_iam_member" "lakehouse_publisher" {
 
   topic  = google_pubsub_topic.lakehouse_flagged[0].name
   role   = "roles/pubsub.publisher"
-  member = "serviceAccount:lookout@${local.aegis_project_id}.iam.gserviceaccount.com"
+  member = "serviceAccount:lookout-backend@${local.aegis_project_id}.iam.gserviceaccount.com"
 }
