@@ -119,3 +119,25 @@ resource "google_pubsub_topic_iam_member" "lakehouse_publisher" {
   role   = "roles/pubsub.publisher"
   member = "serviceAccount:lookout-backend@${local.aegis_project_id}.iam.gserviceaccount.com"
 }
+
+# -----------------------------------------------------------------------------
+# IAM: Grant Pub/Sub service account permissions for dead letter queue
+# -----------------------------------------------------------------------------
+
+# Allow Pub/Sub service account to publish to DLQ topic
+resource "google_pubsub_topic_iam_member" "lakehouse_dlq_publisher" {
+  count = local.lakehouse_enabled ? 1 : 0
+
+  topic  = google_pubsub_topic.lakehouse_flagged_dlq[0].name
+  role   = "roles/pubsub.publisher"
+  member = "serviceAccount:service-${local.lakehouse_project_number}@gcp-sa-pubsub.iam.gserviceaccount.com"
+}
+
+# Allow Pub/Sub service account to acknowledge messages from the subscription (for DLQ forwarding)
+resource "google_pubsub_subscription_iam_member" "lakehouse_dlq_subscriber" {
+  count = local.lakehouse_enabled ? 1 : 0
+
+  subscription = google_pubsub_subscription.lakehouse_flagged_bq[0].name
+  role         = "roles/pubsub.subscriber"
+  member       = "serviceAccount:service-${local.lakehouse_project_number}@gcp-sa-pubsub.iam.gserviceaccount.com"
+}
