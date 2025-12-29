@@ -47,6 +47,10 @@ locals {
     AEGIS_AEGIS_TOPIC_BACKFILL_MESSAGES = format(local.aegis_config.tenant_topic_format, "backfill")
     AEGIS_AEGIS_BUCKET_LARGE_MESSAGES   = format(local.aegis_config.tenant_bucket_format, "large-messages")
     AEGIS_BACKFILL_QUERY                = var.app_config.backfill_query
+
+    # Message ID Queue (optional)
+    AEGIS_AEGIS_TOPIC_MESSAGE_IDS        = try(google_pubsub_topic.gmail_message_ids[0].name, null)
+    AEGIS_AEGIS_SUBSCRIPTION_MESSAGE_IDS = try(google_pubsub_subscription.gmail_message_ids[0].name, null)
   }
 
   inferred_helm_values = {
