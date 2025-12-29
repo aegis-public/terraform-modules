@@ -103,3 +103,13 @@ variable "lakehouse_config" {
     enabled = false
   }
 }
+
+variable "message_id_queue_config" {
+  description = "Message ID queue configuration for decoupled message processing"
+  type = object({
+    enabled = optional(bool, false)
+  })
+  default = {
+    enabled = false
+  }
+}
