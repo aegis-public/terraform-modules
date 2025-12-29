@@ -57,23 +57,11 @@ The `byoc-gcp` module provisions all GCP infrastructure required for a BYOC (Bri
 
 When updating the module (adding new features, fixing bugs, or updating schemas), follow this process:
 
-### 1. Make Changes
+### 1. Generate a new Release using semantic versioning
 
-```bash
-cd ~/path/to/aegis-public/terraform-modules
-# Edit files in byoc-gcp/
-```
+https://github.com/aegis-public/terraform-modules/releases
 
-### 2. Commit and Tag
-
-```bash
-git add .
-git commit -m "Your commit message"
-git tag vX.Y.Z  # Use semantic versioning
-git push origin main --tags
-```
-
-### 3. Test with Staging Tenant
+### 2. Test with Staging Tenant
 
 Update a staging tenant to use the new version:
 
@@ -81,14 +69,14 @@ Update a staging tenant to use the new version:
 # Edit tenant .tf file - update the module source ref
 # Update the ref to the new version
 
-terraform init -upgrade  # Fetch new module version
-terraform plan           # Review changes carefully
-terraform apply          # Apply after approval
+terraform init -upgrade                            # Fetch new module version
+terraform plan -out=tfplan -target=module.{module} # Review changes carefully
+terraform apply                                    # Apply after review
 ```
 
 Verify the changes work correctly before rolling out to other tenants.
 
-### 4. Roll Out to Production Tenants
+### 3. Roll Out to Production Tenants
 
 After validating with the staging tenant, update production tenants incrementally:
 
@@ -96,8 +84,8 @@ After validating with the staging tenant, update production tenants incrementall
 # Update tenant files to use the new version
 # Change ref=v0.1.16 -> ref=v0.2.0
 
-terraform plan   # Review all changes
-terraform apply  # Apply after approval
+terraform plan -out=tfplan  # Review all changes
+terraform apply             # Apply after approval
 ```
 
 ## Versioning
@@ -107,18 +95,6 @@ This repository uses [Semantic Versioning](https://semver.org/):
 - **MAJOR** (v1.0.0 -> v2.0.0): Breaking changes to module interface
 - **MINOR** (v0.1.0 -> v0.2.0): New features, backward compatible
 - **PATCH** (v0.1.0 -> v0.1.1): Bug fixes, backward compatible
-
-### Tags vs Releases
-
-**Tags** are git pointers to specific commits. Terraform modules only need tags to work:
-
-```hcl
-source = "github.com/aegis-public/terraform-modules.git//byoc-gcp?ref=v0.1.17"
-```
-
-Terraform fetches the code at that tag - it doesn't use GitHub Releases.
-
-**Releases** are a GitHub UI feature built on top of tags. They provide a nice changelog page and "Latest" badge, but are optional for Terraform modules.
 
 ### Version History
 
