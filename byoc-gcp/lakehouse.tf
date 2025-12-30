@@ -141,3 +141,25 @@ resource "google_pubsub_subscription_iam_member" "lakehouse_dlq_subscriber" {
   role         = "roles/pubsub.subscriber"
   member       = "serviceAccount:service-${local.lakehouse_project_number}@gcp-sa-pubsub.iam.gserviceaccount.com"
 }
+
+# -----------------------------------------------------------------------------
+# IAM: Grant Lighthouse service account read access to query reporting data
+# -----------------------------------------------------------------------------
+
+# Grant lighthouse service account read access to the reporting dataset
+resource "google_bigquery_dataset_iam_member" "lakehouse_lighthouse_viewer" {
+  count = local.lakehouse_enabled ? 1 : 0
+
+  dataset_id = google_bigquery_dataset.lakehouse_reporting[0].dataset_id
+  role       = "roles/bigquery.dataViewer"
+  member     = "serviceAccount:${google_service_account.workspace_connector.email}"
+}
+
+# Grant lighthouse service account ability to run BigQuery jobs
+resource "google_project_iam_member" "lakehouse_lighthouse_job_user" {
+  count = local.lakehouse_enabled ? 1 : 0
+
+  project = local.lakehouse_project_id
+  role    = "roles/bigquery.jobUser"
+  member  = "serviceAccount:${google_service_account.workspace_connector.email}"
+}
