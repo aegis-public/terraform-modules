@@ -49,8 +49,8 @@ locals {
     AEGIS_BACKFILL_QUERY                = var.app_config.backfill_query
 
     # Message ID Queue (optional)
-    AEGIS_AEGIS_TOPIC_MESSAGE_IDS        = try(google_pubsub_topic.gmail_message_ids[0].name, null)
-    AEGIS_AEGIS_SUBSCRIPTION_MESSAGE_IDS = try(google_pubsub_subscription.gmail_message_ids[0].name, null)
+    AEGIS_AEGIS_TOPIC_MESSAGE_IDS        = try(google_pubsub_topic.gmail_message_ids[0].id, null)
+    AEGIS_AEGIS_SUBSCRIPTION_MESSAGE_IDS = try(google_pubsub_subscription.gmail_message_ids[0].id, null)
   }
 
   inferred_helm_values = {
