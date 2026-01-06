@@ -17,7 +17,7 @@ resource "google_pubsub_subscription" "gmail_inbox_messages_received" {
       write_metadata = true
     }
     oidc_token {
-      service_account_email = google_service_account.workspace_connector.email
+      service_account_email = data.google_service_account.workspace_connector.email
     }
   }
 
@@ -74,7 +74,7 @@ resource "google_pubsub_topic_iam_member" "gmail_message_ids_publisher" {
 
   topic  = google_pubsub_topic.gmail_message_ids[0].name
   role   = "roles/pubsub.publisher"
-  member = "serviceAccount:${google_service_account.workspace_connector.email}"
+  member = "serviceAccount:${data.google_service_account.workspace_connector.email}"
 }
 
 # IAM: Allow workspace connector to subscribe to message IDs subscription
@@ -83,5 +83,5 @@ resource "google_pubsub_subscription_iam_member" "gmail_message_ids_subscriber" 
 
   subscription = google_pubsub_subscription.gmail_message_ids[0].name
   role         = "roles/pubsub.subscriber"
-  member       = "serviceAccount:${google_service_account.workspace_connector.email}"
+  member       = "serviceAccount:${data.google_service_account.workspace_connector.email}"
 }

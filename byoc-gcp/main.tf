@@ -1,10 +1,6 @@
-# service account for workspace connector
-resource "google_service_account" "workspace_connector" {
-  account_id   = var.gcp_service_account_id
-  display_name = "Aegis Workspace Connector"
-  lifecycle {
-    ignore_changes = [display_name, description]
-  }
+# service account for workspace connector (created by prod terraform)
+data "google_service_account" "workspace_connector" {
+  account_id = var.gcp_service_account_id
 }
 
 data "google_container_cluster" "primary" {
@@ -21,14 +17,14 @@ locals {
 
 # allow kubernetes service account to impersonate gcp service account
 resource "google_service_account_iam_member" "workspace_connector_wif" {
-  service_account_id = google_service_account.workspace_connector.name
+  service_account_id = data.google_service_account.workspace_connector.name
   role               = "roles/iam.workloadIdentityUser"
   member             = "serviceAccount:${local.workload_identity_pool}[${var.kubernetes_namespace}/${local.kubernetes_service_account}]"
 }
 
 # allow gcp service account to create tokens for itself (for domain wide delegation)
 resource "google_service_account_iam_member" "workspace_connector_token_creator" {
-  service_account_id = google_service_account.workspace_connector.name
+  service_account_id = data.google_service_account.workspace_connector.name
   role               = "roles/iam.serviceAccountTokenCreator"
-  member             = "serviceAccount:${google_service_account.workspace_connector.email}"
+  member             = "serviceAccount:${data.google_service_account.workspace_connector.email}"
 }

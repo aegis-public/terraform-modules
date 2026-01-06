@@ -33,7 +33,7 @@ locals {
     AEGIS_EMAIL_DOMAINS  = join(",", var.app_config.email_domains)
     AEGIS_BASE_URL       = var.helm_ingress_url
 
-    AEGIS_GOOGLE_SERVICE_ACCOUNT_EMAIL   = google_service_account.workspace_connector.email
+    AEGIS_GOOGLE_SERVICE_ACCOUNT_EMAIL   = data.google_service_account.workspace_connector.email
     AEGIS_GOOGLE_ADMIN_EMAIL_ADDRESS     = try(var.app_config.google_workspace_config.admin_email_address, null)
     AEGIS_GOOGLE_TOPIC_GMAIL_INBOX_WATCH = google_pubsub_topic.gmail_inbox.id
     AEGIS_GOOGLE_GMAIL_LABEL_NAMES       = try(jsonencode(var.app_config.google_workspace_config.gmail_label_names), null)
@@ -77,7 +77,7 @@ resource "helm_release" "workspace_connector" {
     yamlencode({
       serviceAccount = {
         workloadIdentity = {
-          gcpServiceAccount = google_service_account.workspace_connector.email
+          gcpServiceAccount = data.google_service_account.workspace_connector.email
         }
       }
       cloudSql = {
