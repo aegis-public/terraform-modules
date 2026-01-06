@@ -20,12 +20,6 @@ locals {
 
 locals {
   inferred_env_vars = {
-    # Only set AEGIS_READ_ONLY_MODE if AEGIS_ACCESS_MODE is not provided in app_config.env
-    # AEGIS_ACCESS_MODE supersedes AEGIS_READ_ONLY_MODE
-    AEGIS_READ_ONLY_MODE = lookup(var.app_config.env, "AEGIS_ACCESS_MODE", null) == null ? (
-      var.app_config.read_only_mode ? "true" : "false"
-    ) : null
-
     AEGIS_DATABASE_URL = var.database.url != null ? var.database.url : (
       "postgresql://default:${module.sql_db[0].generated_user_password}@localhost:5432/default?sslmode=disable"
     )
