@@ -8,8 +8,8 @@ data "google_project" "current" {
 }
 
 locals {
-  lakehouse_enabled       = var.lakehouse_config.enabled
-  lakehouse_project_id    = local.lakehouse_enabled ? data.google_project.current[0].project_id : null
+  lakehouse_enabled        = var.lakehouse_config.enabled
+  lakehouse_project_id     = local.lakehouse_enabled ? data.google_project.current[0].project_id : null
   lakehouse_project_number = local.lakehouse_enabled ? data.google_project.current[0].number : null
 }
 
@@ -138,6 +138,145 @@ resource "google_pubsub_subscription_iam_member" "lakehouse_dlq_subscriber" {
   count = local.lakehouse_enabled ? 1 : 0
 
   subscription = google_pubsub_subscription.lakehouse_flagged_bq[0].name
+  role         = "roles/pubsub.subscriber"
+  member       = "serviceAccount:service-${local.lakehouse_project_number}@gcp-sa-pubsub.iam.gserviceaccount.com"
+}
+
+# =============================================================================
+# Lakehouse Received Events Infrastructure
+# Streams all received emails from workspace-connector to BigQuery for aggregate metrics
+# =============================================================================
+
+# -----------------------------------------------------------------------------
+# BigQuery Table: received (all emails for aggregate metrics)
+# -----------------------------------------------------------------------------
+
+resource "google_bigquery_table" "lakehouse_received" {
+  count = local.lakehouse_enabled ? 1 : 0
+
+  dataset_id = google_bigquery_dataset.lakehouse_reporting[0].dataset_id
+  table_id   = "received"
+
+  time_partitioning {
+    type  = "DAY"
+    field = "received_at"
+  }
+
+  clustering = ["email_address"]
+
+  schema = file("${path.module}/schemas/lakehouse_received.json")
+}
+
+# -----------------------------------------------------------------------------
+# BigQuery Materialized View: daily_stats (pre-aggregated total_processed)
+# -----------------------------------------------------------------------------
+
+resource "google_bigquery_table" "lakehouse_daily_stats" {
+  count = local.lakehouse_enabled ? 1 : 0
+
+  dataset_id = google_bigquery_dataset.lakehouse_reporting[0].dataset_id
+  table_id   = "daily_stats"
+
+  materialized_view {
+    query               = <<-SQL
+      SELECT
+        DATE(received_at) as date,
+        COUNT(*) as total_processed
+      FROM `${local.lakehouse_project_id}.${google_bigquery_dataset.lakehouse_reporting[0].dataset_id}.${google_bigquery_table.lakehouse_received[0].table_id}`
+      GROUP BY DATE(received_at)
+    SQL
+    enable_refresh      = true
+    refresh_interval_ms = 1800000 # 30 minutes
+  }
+
+  depends_on = [google_bigquery_table.lakehouse_received]
+}
+
+# -----------------------------------------------------------------------------
+# Pub/Sub Topic for Received Events
+# -----------------------------------------------------------------------------
+
+resource "google_pubsub_topic" "lakehouse_received" {
+  count = local.lakehouse_enabled ? 1 : 0
+
+  name                       = "lakehouse-received"
+  message_retention_duration = "864000s" # 10 days
+}
+
+# Dead letter topic for failed BQ writes
+resource "google_pubsub_topic" "lakehouse_received_dlq" {
+  count = local.lakehouse_enabled ? 1 : 0
+
+  name                       = "lakehouse-received-dlq"
+  message_retention_duration = "86400s" # 1 day
+}
+
+# -----------------------------------------------------------------------------
+# BigQuery Subscription for Received Events (Pub/Sub → BQ direct write)
+# -----------------------------------------------------------------------------
+
+resource "google_pubsub_subscription" "lakehouse_received_bq" {
+  count = local.lakehouse_enabled ? 1 : 0
+
+  name  = "lakehouse-received-bigquery"
+  topic = google_pubsub_topic.lakehouse_received[0].id
+
+  bigquery_config {
+    table               = "${local.lakehouse_project_id}.${google_bigquery_dataset.lakehouse_reporting[0].dataset_id}.${google_bigquery_table.lakehouse_received[0].table_id}"
+    use_table_schema    = true
+    drop_unknown_fields = true
+    write_metadata      = false
+  }
+
+  dead_letter_policy {
+    dead_letter_topic     = google_pubsub_topic.lakehouse_received_dlq[0].id
+    max_delivery_attempts = 5
+  }
+
+  depends_on = [google_bigquery_dataset_iam_member.pubsub_bq_writer]
+}
+
+# Pull subscription for DLQ monitoring
+resource "google_pubsub_subscription" "lakehouse_received_dlq_pull" {
+  count = local.lakehouse_enabled ? 1 : 0
+
+  name  = "lakehouse-received-dlq-pull"
+  topic = google_pubsub_topic.lakehouse_received_dlq[0].id
+
+  ack_deadline_seconds       = 600
+  message_retention_duration = "604800s" # 7 days
+}
+
+# -----------------------------------------------------------------------------
+# IAM: Grant workspace-connector permission to publish received events
+# -----------------------------------------------------------------------------
+
+resource "google_pubsub_topic_iam_member" "lakehouse_received_publisher" {
+  count = local.lakehouse_enabled ? 1 : 0
+
+  topic  = google_pubsub_topic.lakehouse_received[0].name
+  role   = "roles/pubsub.publisher"
+  member = "serviceAccount:lighthouse@${local.lakehouse_project_id}.iam.gserviceaccount.com"
+}
+
+# -----------------------------------------------------------------------------
+# IAM: Grant Pub/Sub service account permissions for received events DLQ
+# -----------------------------------------------------------------------------
+
+# Allow Pub/Sub service account to publish to DLQ topic
+resource "google_pubsub_topic_iam_member" "lakehouse_received_dlq_publisher" {
+  count = local.lakehouse_enabled ? 1 : 0
+
+  topic  = google_pubsub_topic.lakehouse_received_dlq[0].name
+  role   = "roles/pubsub.publisher"
+  member = "serviceAccount:service-${local.lakehouse_project_number}@gcp-sa-pubsub.iam.gserviceaccount.com"
+}
+
+# Allow Pub/Sub service account to acknowledge messages from the subscription (for DLQ forwarding)
+resource "google_pubsub_subscription_iam_member" "lakehouse_received_dlq_subscriber" {
+  count = local.lakehouse_enabled ? 1 : 0
+
+  subscription = google_pubsub_subscription.lakehouse_received_bq[0].name
   role         = "roles/pubsub.subscriber"
   member       = "serviceAccount:service-${local.lakehouse_project_number}@gcp-sa-pubsub.iam.gserviceaccount.com"
 }
