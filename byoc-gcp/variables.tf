@@ -46,7 +46,6 @@ variable "database" {
 variable "app_config" {
   description = "Application configuration"
   type = object({
-    read_only_mode           = optional(bool, false)
     workspace_kind           = string
     email_addresses          = list(string)
     excluded_email_addresses = optional(list(string), [])
