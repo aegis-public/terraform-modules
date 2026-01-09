@@ -46,7 +46,7 @@ variable "database" {
 variable "app_config" {
   description = "Application configuration"
   type = object({
-    read_only_mode           = optional(bool, false)
+    access_mode              = optional(string, "readonly")
     workspace_kind           = string
     email_addresses          = list(string)
     excluded_email_addresses = optional(list(string), [])
@@ -68,6 +68,10 @@ variable "app_config" {
       client_secret = optional(string, "")
     }), null)
   })
+  validation {
+    condition     = contains(["readonly", "modify", "full"], var.app_config.access_mode)
+    error_message = "access_mode must be one of: readonly, modify, full"
+  }
   validation {
     condition     = contains(["google", "microsoft"], var.app_config.workspace_kind)
     error_message = "workspace_kind must be either google or microsoft"
