@@ -35,6 +35,9 @@
     {"name": "last_labeled_at", "type": "TIMESTAMP", "description": "Timestamp of most recent label change."},
     {"name": "defanged_html_body_url", "type": "STRING", "description": "URL for defanged HTML. Presence indicates email was defanged."}
   ]},
+  {"name": "campaign", "type": "RECORD", "mode": "NULLABLE", "fields": [
+    {"name": "id", "type": "STRING", "mode": "NULLABLE", "description": "Campaign UUID"}
+  ]},
   {"name": "auth_results", "type": "RECORD", "mode": "REPEATED", "fields": [
     {"name": "spf", "type": "RECORD", "fields": [
       {"name": "result", "type": "STRING"},
