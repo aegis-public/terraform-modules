@@ -61,6 +61,7 @@ resource "google_pubsub_subscription" "gmail_message_ids" {
 
   ack_deadline_seconds       = 60
   message_retention_duration = "604800s" # 7 days
+  enable_message_ordering    = true
 
   retry_policy {
     minimum_backoff = "10s"
@@ -84,4 +85,8 @@ resource "google_pubsub_subscription_iam_member" "gmail_message_ids_subscriber" 
   subscription = google_pubsub_subscription.gmail_message_ids[0].name
   role         = "roles/pubsub.subscriber"
   member       = "serviceAccount:${google_service_account.workspace_connector.email}"
+
+  lifecycle {
+    replace_triggered_by = [google_pubsub_subscription.gmail_message_ids[0]]
+  }
 }
