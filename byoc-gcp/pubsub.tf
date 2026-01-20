@@ -61,7 +61,6 @@ resource "google_pubsub_subscription" "gmail_message_ids" {
 
   ack_deadline_seconds       = 60
   message_retention_duration = "604800s" # 7 days
-  enable_message_ordering    = true
 
   retry_policy {
     minimum_backoff = "10s"
