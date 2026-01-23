@@ -1,7 +1,7 @@
 [
   {"name": "message_id", "type": "STRING", "mode": "REQUIRED"},
   {"name": "internet_message_id", "type": "STRING", "description": "Internet Message ID as defined by RFC 5322."},
-  {"name": "campaign_id", "type": "STRING", "mode": "REQUIRED", "description": "Campaign UUID, duplicate of campaign.id, needed for clustering."},
+  {"name": "campaign_id", "type": "STRING", "description": "Campaign UUID, duplicate of campaign.id, needed for clustering."},
   {"name": "email_address", "type": "STRING", "mode": "REQUIRED"},
   {"name": "sender", "type": "RECORD", "fields": [
     {"name": "display_name", "type": "STRING"},
