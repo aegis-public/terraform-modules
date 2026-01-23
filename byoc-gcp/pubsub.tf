@@ -1,13 +1,27 @@
+# =============================================================================
+# Gmail Pub/Sub Infrastructure (Google Workspace only)
+# =============================================================================
+
+locals {
+  is_google_workspace = var.app_config.workspace_kind == "google"
+  # Message ID queue is only supported for Google Workspace
+  message_id_queue_enabled = local.is_google_workspace && var.message_id_queue_config.enabled
+}
+
 # pubsub topic to receive gmail inbox notifications
 resource "google_pubsub_topic" "gmail_inbox" {
+  count = local.is_google_workspace ? 1 : 0
+
   name                       = "aegis-gmail-inbox"
   message_retention_duration = "864000s" # 10d
 }
 
 # pubsub subscription to deliver gmail inbox notifications to workspace connector
 resource "google_pubsub_subscription" "gmail_inbox_messages_received" {
+  count = local.is_google_workspace ? 1 : 0
+
   name  = "aegis-gmail-inbox-messages-received"
-  topic = google_pubsub_topic.gmail_inbox.name
+  topic = google_pubsub_topic.gmail_inbox[0].name
 
   ack_deadline_seconds = 600
 
@@ -30,19 +44,17 @@ resource "google_pubsub_subscription" "gmail_inbox_messages_received" {
 
 # permission for system gmail service account to publish to the topic
 resource "google_pubsub_topic_iam_member" "gmail_publisher" {
-  topic  = google_pubsub_topic.gmail_inbox.name
+  count = local.is_google_workspace ? 1 : 0
+
+  topic  = google_pubsub_topic.gmail_inbox[0].name
   role   = "roles/pubsub.publisher"
   member = "serviceAccount:gmail-api-push@system.gserviceaccount.com"
 }
 
 # =============================================================================
-# Message ID Queue Infrastructure (Optional)
+# Message ID Queue Infrastructure (Optional, Google Workspace only)
 # Decouples webhook handler from message fetching for improved latency
 # =============================================================================
-
-locals {
-  message_id_queue_enabled = var.message_id_queue_config.enabled
-}
 
 # Topic for message IDs (handler publishes here)
 resource "google_pubsub_topic" "gmail_message_ids" {
