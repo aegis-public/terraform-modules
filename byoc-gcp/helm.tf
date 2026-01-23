@@ -34,7 +34,7 @@ locals {
 
     AEGIS_GOOGLE_SERVICE_ACCOUNT_EMAIL   = google_service_account.workspace_connector.email
     AEGIS_GOOGLE_ADMIN_EMAIL_ADDRESS     = try(var.app_config.google_workspace_config.admin_email_address, null)
-    AEGIS_GOOGLE_TOPIC_GMAIL_INBOX_WATCH = google_pubsub_topic.gmail_inbox.id
+    AEGIS_GOOGLE_TOPIC_GMAIL_INBOX_WATCH = try(google_pubsub_topic.gmail_inbox[0].id, null)
     AEGIS_GOOGLE_GMAIL_LABEL_NAMES       = try(jsonencode(var.app_config.google_workspace_config.gmail_label_names), null)
 
     AEGIS_MICROSOFT_TENANT_ID     = try(var.app_config.microsoft_workspace_config.tenant_id, null)
