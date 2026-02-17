@@ -39,7 +39,7 @@ resource "google_bigquery_table" "lakehouse_flagged" {
     field = "received_at"
   }
 
-  clustering = ["email_address", "message_id", "attack_type"]
+  clustering = ["email_address", "campaign_id", "attack_type"]
 
   schema = file("${path.module}/schemas/lakehouse_flagged.json")
 }
