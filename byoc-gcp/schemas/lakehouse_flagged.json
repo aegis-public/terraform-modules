@@ -1,7 +1,7 @@
 [
   {"name": "message_id", "type": "STRING", "mode": "REQUIRED"},
   {"name": "internet_message_id", "type": "STRING", "description": "Internet Message ID as defined by RFC 5322."},
-  {"name": "attack_type", "type": "STRING", "description": "Umbrella attack category (e.g. BEC, Credential Theft). Top-level duplicate of classification.attack_type, needed for clustering."},
+  {"name": "attack_type", "type": "STRING", "description": "Umbrella attack category (e.g. BEC, Credential Theft)."},
   {"name": "campaign_id", "type": "STRING", "description": "Campaign UUID, duplicate of campaign.id, needed for clustering."},
   {"name": "email_address", "type": "STRING", "mode": "REQUIRED"},
   {"name": "sender", "type": "RECORD", "fields": [
@@ -37,7 +37,6 @@
     {"name": "admin_reason", "type": "STRING", "description": "Customer-provided context for label change."},
     {"name": "last_labeled_at", "type": "TIMESTAMP", "description": "Timestamp of most recent label change."},
     {"name": "defanged_html_body_url", "type": "STRING", "description": "URL for defanged HTML. Presence indicates email was defanged."},
-    {"name": "attack_type", "type": "STRING", "description": "Umbrella attack category (e.g. BEC, Credential Theft)."}
   ]},
   {"name": "campaign", "type": "RECORD", "mode": "NULLABLE", "fields": [
     {"name": "id", "type": "STRING", "mode": "NULLABLE", "description": "Campaign UUID"}
