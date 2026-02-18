@@ -36,7 +36,7 @@
     {"name": "actor_id", "type": "STRING", "description": "User or customer admin. Null for system."},
     {"name": "admin_reason", "type": "STRING", "description": "Customer-provided context for label change."},
     {"name": "last_labeled_at", "type": "TIMESTAMP", "description": "Timestamp of most recent label change."},
-    {"name": "defanged_html_body_url", "type": "STRING", "description": "URL for defanged HTML. Presence indicates email was defanged."},
+    {"name": "defanged_html_body_url", "type": "STRING", "description": "URL for defanged HTML. Presence indicates email was defanged."}
   ]},
   {"name": "campaign", "type": "RECORD", "mode": "NULLABLE", "fields": [
     {"name": "id", "type": "STRING", "mode": "NULLABLE", "description": "Campaign UUID"}
