@@ -25,6 +25,7 @@ locals {
     )
 
     AEGIS_ACCESS_MODE              = var.app_config.access_mode
+    AEGIS_OPERATIONAL_MODE         = var.app_config.operational_mode
     AEGIS_EMAIL_ADDRESSES          = join(",", var.app_config.email_addresses)
     AEGIS_EXCLUDED_EMAIL_ADDRESSES = join(",", var.app_config.excluded_email_addresses)
 
