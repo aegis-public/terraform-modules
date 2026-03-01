@@ -47,6 +47,7 @@ variable "app_config" {
   description = "Application configuration"
   type = object({
     access_mode              = optional(string, "readonly")
+    operational_mode         = optional(string, "readonly")
     workspace_kind           = string
     email_addresses          = list(string)
     excluded_email_addresses = optional(list(string), [])
