@@ -60,6 +60,7 @@ variable "app_config" {
         spam      = string
         phishing  = string
         promotion = string
+        malware   = string
       }), null)
     }), null)
     microsoft_workspace_config = optional(object({
