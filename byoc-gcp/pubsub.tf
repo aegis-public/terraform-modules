@@ -25,6 +25,10 @@ resource "google_pubsub_subscription" "gmail_inbox_messages_received" {
 
   ack_deadline_seconds = 600
 
+  expiration_policy {
+    ttl = "" # never expire; connector may be paused (replicaCount=0) and auto-deletion breaks Gmail push
+  }
+
   push_config {
     push_endpoint = "${var.helm_ingress_url}/public/google/message_received"
     no_wrapper {
@@ -74,6 +78,10 @@ resource "google_pubsub_subscription" "gmail_message_ids" {
   ack_deadline_seconds       = 60
   message_retention_duration = "604800s" # 7 days
   enable_message_ordering    = true
+
+  expiration_policy {
+    ttl = "" # never expire
+  }
 
   retry_policy {
     minimum_backoff = "10s"
