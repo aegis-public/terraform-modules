@@ -106,6 +106,10 @@ resource "google_pubsub_subscription" "lakehouse_flagged_dlq_pull" {
 
   ack_deadline_seconds       = 600
   message_retention_duration = "604800s" # 7 days
+
+  expiration_policy {
+    ttl = "" # never expire; DLQ is low-traffic and would otherwise be auto-deleted after 31d
+  }
 }
 
 # -----------------------------------------------------------------------------
