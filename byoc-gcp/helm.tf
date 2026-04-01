@@ -62,11 +62,6 @@ locals {
 
 locals {
   helm_release_name = "aegis-workspace-connector"
-
-  active_helm_overrides = var.active ? {} : {
-    replicaCount = 0
-    labels       = { "aegisai.ai/active" = "false" }
-  }
 }
 
 resource "helm_release" "workspace_connector" {
@@ -77,21 +72,26 @@ resource "helm_release" "workspace_connector" {
   namespace        = var.kubernetes_namespace
   create_namespace = true
 
-  values = [
-    yamlencode(local.inferred_helm_values),
-    yamlencode({
-      serviceAccount = {
-        workloadIdentity = {
-          gcpServiceAccount = google_service_account.workspace_connector.email
+  values = concat(
+    [
+      yamlencode(local.inferred_helm_values),
+      yamlencode({
+        serviceAccount = {
+          workloadIdentity = {
+            gcpServiceAccount = google_service_account.workspace_connector.email
+          }
         }
-      }
-      cloudSql = {
-        instanceConnectionName = var.database.create ? module.sql_db[0].instance_connection_name : null
-      }
-    }),
-    yamlencode(local.active_helm_overrides),
-    yamlencode(var.helm_values),
-  ]
+        cloudSql = {
+          instanceConnectionName = var.database.create ? module.sql_db[0].instance_connection_name : null
+        }
+      }),
+    ],
+    var.active ? [] : [yamlencode({
+      replicaCount = 0
+      labels       = { "aegisai.ai/active" = "false" }
+    })],
+    [yamlencode(var.helm_values)],
+  )
 
   depends_on = [
     google_service_account_iam_member.workspace_connector_wif,
