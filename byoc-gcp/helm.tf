@@ -62,6 +62,11 @@ locals {
 
 locals {
   helm_release_name = "aegis-workspace-connector"
+
+  active_helm_overrides = var.active ? {} : {
+    replicaCount = 0
+    labels       = { "aegisai.ai/active" = "false" }
+  }
 }
 
 resource "helm_release" "workspace_connector" {
@@ -84,6 +89,7 @@ resource "helm_release" "workspace_connector" {
         instanceConnectionName = var.database.create ? module.sql_db[0].instance_connection_name : null
       }
     }),
+    yamlencode(local.active_helm_overrides),
     yamlencode(var.helm_values),
   ]
 
@@ -91,4 +97,8 @@ resource "helm_release" "workspace_connector" {
     google_service_account_iam_member.workspace_connector_wif,
     google_service_account_iam_member.workspace_connector_token_creator,
   ]
+
+  lifecycle {
+    prevent_destroy = true
+  }
 }
