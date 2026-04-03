@@ -74,7 +74,7 @@ resource "helm_release" "workspace_connector" {
   name             = local.helm_release_name
   repository       = "https://aegis-public.github.io/helm-charts"
   chart            = "workspace-connector"
-  version          = "0.1.27"
+  version          = "0.1.28"
   namespace        = var.kubernetes_namespace
   create_namespace = true
 
