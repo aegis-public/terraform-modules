@@ -3,6 +3,12 @@ variable "aegis_tenant_id" {
   type        = string
 }
 
+variable "aegis_project_id" {
+  description = "Aegis GCP project ID"
+  type        = string
+  default     = "friendly-access-450904-h1"
+}
+
 variable "gke_cluster_link" {
   description = "GKE cluster selfLink"
   type        = string
