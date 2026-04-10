@@ -125,3 +125,9 @@ variable "active" {
   type        = bool
   default     = true
 }
+
+variable "pubsub_resource_prefix" {
+  description = "Prefix for Pub/Sub topic and subscription names. Defaults to 'aegis' (matching existing resources). Override only when two connector modules share the same GCP project, to avoid name collisions."
+  type        = string
+  default     = "aegis"
+}

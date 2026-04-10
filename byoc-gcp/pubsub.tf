@@ -14,7 +14,7 @@ locals {
 resource "google_pubsub_topic" "gmail_inbox" {
   count = local.is_google_workspace ? 1 : 0
 
-  name                       = "aegis-gmail-inbox"
+  name                       = "${var.pubsub_resource_prefix}-gmail-inbox"
   message_retention_duration = "864000s" # 10d
 }
 
@@ -22,7 +22,7 @@ resource "google_pubsub_topic" "gmail_inbox" {
 resource "google_pubsub_subscription" "gmail_inbox_messages_received" {
   count = local.is_google_workspace ? 1 : 0
 
-  name  = "aegis-gmail-inbox-messages-received"
+  name  = "${var.pubsub_resource_prefix}-gmail-inbox-messages-received"
   topic = google_pubsub_topic.gmail_inbox[0].name
 
   ack_deadline_seconds = 600
@@ -66,7 +66,7 @@ resource "google_pubsub_topic_iam_member" "gmail_publisher" {
 resource "google_pubsub_topic" "gmail_message_ids" {
   count = local.gmail_message_id_queue_enabled ? 1 : 0
 
-  name                       = "aegis-gmail-message-ids"
+  name                       = "${var.pubsub_resource_prefix}-gmail-message-ids"
   message_retention_duration = "864000s" # 10 days
 }
 
@@ -74,7 +74,7 @@ resource "google_pubsub_topic" "gmail_message_ids" {
 resource "google_pubsub_subscription" "gmail_message_ids" {
   count = local.gmail_message_id_queue_enabled ? 1 : 0
 
-  name  = "aegis-gmail-message-ids-worker"
+  name  = "${var.pubsub_resource_prefix}-gmail-message-ids-worker"
   topic = google_pubsub_topic.gmail_message_ids[0].name
 
   ack_deadline_seconds       = 60
@@ -122,7 +122,7 @@ resource "google_pubsub_subscription_iam_member" "gmail_message_ids_subscriber" 
 resource "google_pubsub_topic" "outlook_message_ids" {
   count = local.outlook_message_id_queue_enabled ? 1 : 0
 
-  name                       = "aegis-outlook-message-ids"
+  name                       = "${var.pubsub_resource_prefix}-outlook-message-ids"
   message_retention_duration = "864000s" # 10 days
 }
 
@@ -130,7 +130,7 @@ resource "google_pubsub_topic" "outlook_message_ids" {
 resource "google_pubsub_subscription" "outlook_message_ids" {
   count = local.outlook_message_id_queue_enabled ? 1 : 0
 
-  name  = "aegis-outlook-message-ids-worker"
+  name  = "${var.pubsub_resource_prefix}-outlook-message-ids-worker"
   topic = google_pubsub_topic.outlook_message_ids[0].name
 
   ack_deadline_seconds       = 60
