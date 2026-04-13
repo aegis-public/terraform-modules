@@ -11,9 +11,12 @@ locals {
       local.aegis_project_id,
       var.aegis_tenant_id
     )
+    # Sub-tenants share the parent's large-messages bucket, so derive the
+    # bucket name from the parent tenant ID rather than the full (dotted)
+    # sub-tenant ID to avoid creating a new bucket with dots in the name.
     tenant_bucket_format = format(
       local.aegis_config_deps.base_bucket_format,
-      var.aegis_tenant_id
+      local.is_sub_tenant ? var.sub_tenant_of : var.aegis_tenant_id
     )
   }
 }
@@ -33,7 +36,7 @@ locals {
     AEGIS_EMAIL_DOMAINS  = join(",", var.app_config.email_domains)
     AEGIS_BASE_URL       = var.helm_ingress_url
 
-    AEGIS_GOOGLE_SERVICE_ACCOUNT_EMAIL   = google_service_account.workspace_connector.email
+    AEGIS_GOOGLE_SERVICE_ACCOUNT_EMAIL   = local.workspace_connector_sa_email
     AEGIS_GOOGLE_ADMIN_EMAIL_ADDRESS     = try(var.app_config.google_workspace_config.admin_email_address, null)
     AEGIS_GOOGLE_TOPIC_GMAIL_INBOX_WATCH = try(google_pubsub_topic.gmail_inbox[0].id, null)
     AEGIS_GOOGLE_GMAIL_LABEL_NAMES       = try(jsonencode(var.app_config.google_workspace_config.gmail_label_names), null)
@@ -67,7 +70,9 @@ locals {
 }
 
 locals {
-  helm_release_name = "aegis-workspace-connector"
+  # Sub-tenants run as a separate Helm release alongside the parent connector in
+  # the same k8s namespace; the release name doubles as the k8s SA name for WIF.
+  helm_release_name = local.is_sub_tenant ? "aegis-workspace-connector-${local.sub_tenant_suffix}" : "aegis-workspace-connector"
 }
 
 resource "helm_release" "workspace_connector" {
@@ -84,7 +89,7 @@ resource "helm_release" "workspace_connector" {
       yamlencode({
         serviceAccount = {
           workloadIdentity = {
-            gcpServiceAccount = google_service_account.workspace_connector.email
+            gcpServiceAccount = local.workspace_connector_sa_email
           }
         }
         cloudSql = {
@@ -101,7 +106,6 @@ resource "helm_release" "workspace_connector" {
 
   depends_on = [
     google_service_account_iam_member.workspace_connector_wif,
-    google_service_account_iam_member.workspace_connector_token_creator,
   ]
 
   lifecycle {
