@@ -125,3 +125,29 @@ variable "active" {
   type        = bool
   default     = true
 }
+
+variable "sub_tenant_of" {
+  description = <<-EOT
+    When set, this connector is an MSP sub-tenant that shares its parent's GCP project and
+    service account. The value is the parent tenant ID (e.g. "acme").
+
+    Behaviour when set:
+      - No new GCP service account is created; the existing SA identified by
+        gcp_service_account_id is looked up via a data source instead.
+      - Connector Pub/Sub resources (Gmail inbox topic, message-ID queue) are given
+        scoped names with a suffix derived from the sub-tenant portion of aegis_tenant_id
+        (e.g. "aegis-gmail-inbox-sub" instead of "aegis-gmail-inbox").
+      - The Helm release is named "aegis-workspace-connector-<suffix>" so it can
+        coexist with the parent connector in the same k8s namespace.
+      - The large-messages GCS bucket is shared from the parent tenant, not derived
+        from aegis_tenant_id.
+      - The serviceAccountTokenCreator self-binding is skipped (already exists on the
+        parent SA).
+
+    Central-pipeline topics (live/backfill/classified/DLQ) are NOT created by this
+    module; they are expected to be pre-provisioned in the central project (e.g. via
+    the prod Terraform stack).
+  EOT
+  type        = string
+  default     = null
+}

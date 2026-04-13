@@ -8,13 +8,21 @@ locals {
 
   gmail_message_id_queue_enabled   = local.is_google_workspace && var.message_id_queue_config.enabled
   outlook_message_id_queue_enabled = local.is_microsoft_workspace && var.message_id_queue_config.enabled
+
+  # Resource name suffixes: scoped for sub-tenants, default for standalone tenants.
+  gmail_inbox_topic_name        = local.is_sub_tenant ? "aegis-gmail-inbox-${local.sub_tenant_suffix}" : "aegis-gmail-inbox"
+  gmail_inbox_sub_name          = local.is_sub_tenant ? "aegis-gmail-inbox-${local.sub_tenant_suffix}-messages-received" : "aegis-gmail-inbox-messages-received"
+  gmail_message_ids_topic_name  = local.is_sub_tenant ? "aegis-gmail-message-ids-${local.sub_tenant_suffix}" : "aegis-gmail-message-ids"
+  gmail_message_ids_sub_name    = local.is_sub_tenant ? "aegis-gmail-message-ids-${local.sub_tenant_suffix}-worker" : "aegis-gmail-message-ids-worker"
+  outlook_message_ids_topic_name = local.is_sub_tenant ? "aegis-outlook-message-ids-${local.sub_tenant_suffix}" : "aegis-outlook-message-ids"
+  outlook_message_ids_sub_name   = local.is_sub_tenant ? "aegis-outlook-message-ids-${local.sub_tenant_suffix}-worker" : "aegis-outlook-message-ids-worker"
 }
 
 # pubsub topic to receive gmail inbox notifications
 resource "google_pubsub_topic" "gmail_inbox" {
   count = local.is_google_workspace ? 1 : 0
 
-  name                       = "aegis-gmail-inbox"
+  name                       = local.gmail_inbox_topic_name
   message_retention_duration = "864000s" # 10d
 }
 
@@ -22,7 +30,7 @@ resource "google_pubsub_topic" "gmail_inbox" {
 resource "google_pubsub_subscription" "gmail_inbox_messages_received" {
   count = local.is_google_workspace ? 1 : 0
 
-  name  = "aegis-gmail-inbox-messages-received"
+  name  = local.gmail_inbox_sub_name
   topic = google_pubsub_topic.gmail_inbox[0].name
 
   ack_deadline_seconds = 600
@@ -37,7 +45,7 @@ resource "google_pubsub_subscription" "gmail_inbox_messages_received" {
       write_metadata = true
     }
     oidc_token {
-      service_account_email = google_service_account.workspace_connector.email
+      service_account_email = local.workspace_connector_sa_email
     }
   }
 
@@ -66,7 +74,7 @@ resource "google_pubsub_topic_iam_member" "gmail_publisher" {
 resource "google_pubsub_topic" "gmail_message_ids" {
   count = local.gmail_message_id_queue_enabled ? 1 : 0
 
-  name                       = "aegis-gmail-message-ids"
+  name                       = local.gmail_message_ids_topic_name
   message_retention_duration = "864000s" # 10 days
 }
 
@@ -74,7 +82,7 @@ resource "google_pubsub_topic" "gmail_message_ids" {
 resource "google_pubsub_subscription" "gmail_message_ids" {
   count = local.gmail_message_id_queue_enabled ? 1 : 0
 
-  name  = "aegis-gmail-message-ids-worker"
+  name  = local.gmail_message_ids_sub_name
   topic = google_pubsub_topic.gmail_message_ids[0].name
 
   ack_deadline_seconds       = 60
@@ -97,7 +105,7 @@ resource "google_pubsub_topic_iam_member" "gmail_message_ids_publisher" {
 
   topic  = google_pubsub_topic.gmail_message_ids[0].name
   role   = "roles/pubsub.publisher"
-  member = "serviceAccount:${google_service_account.workspace_connector.email}"
+  member = "serviceAccount:${local.workspace_connector_sa_email}"
 }
 
 # IAM: Allow workspace connector to subscribe to message IDs subscription
@@ -106,7 +114,7 @@ resource "google_pubsub_subscription_iam_member" "gmail_message_ids_subscriber" 
 
   subscription = google_pubsub_subscription.gmail_message_ids[0].name
   role         = "roles/pubsub.subscriber"
-  member       = "serviceAccount:${google_service_account.workspace_connector.email}"
+  member       = "serviceAccount:${local.workspace_connector_sa_email}"
 
   lifecycle {
     replace_triggered_by = [google_pubsub_subscription.gmail_message_ids[0]]
@@ -122,7 +130,7 @@ resource "google_pubsub_subscription_iam_member" "gmail_message_ids_subscriber" 
 resource "google_pubsub_topic" "outlook_message_ids" {
   count = local.outlook_message_id_queue_enabled ? 1 : 0
 
-  name                       = "aegis-outlook-message-ids"
+  name                       = local.outlook_message_ids_topic_name
   message_retention_duration = "864000s" # 10 days
 }
 
@@ -130,7 +138,7 @@ resource "google_pubsub_topic" "outlook_message_ids" {
 resource "google_pubsub_subscription" "outlook_message_ids" {
   count = local.outlook_message_id_queue_enabled ? 1 : 0
 
-  name  = "aegis-outlook-message-ids-worker"
+  name  = local.outlook_message_ids_sub_name
   topic = google_pubsub_topic.outlook_message_ids[0].name
 
   ack_deadline_seconds       = 60
@@ -149,7 +157,7 @@ resource "google_pubsub_topic_iam_member" "outlook_message_ids_publisher" {
 
   topic  = google_pubsub_topic.outlook_message_ids[0].name
   role   = "roles/pubsub.publisher"
-  member = "serviceAccount:${google_service_account.workspace_connector.email}"
+  member = "serviceAccount:${local.workspace_connector_sa_email}"
 }
 
 # IAM: Allow workspace connector to subscribe to Outlook message IDs subscription
@@ -158,7 +166,7 @@ resource "google_pubsub_subscription_iam_member" "outlook_message_ids_subscriber
 
   subscription = google_pubsub_subscription.outlook_message_ids[0].name
   role         = "roles/pubsub.subscriber"
-  member       = "serviceAccount:${google_service_account.workspace_connector.email}"
+  member       = "serviceAccount:${local.workspace_connector_sa_email}"
 
   lifecycle {
     replace_triggered_by = [google_pubsub_subscription.outlook_message_ids[0]]
