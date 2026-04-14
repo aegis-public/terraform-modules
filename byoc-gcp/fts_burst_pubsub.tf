@@ -1,12 +1,5 @@
 # =============================================================================
 # FTS Burst Retroactive Quarantine Pub/Sub Infrastructure
-#
-# When kraken detects a first-time-sender burst (OTP/signup bomb), it publishes
-# a trigger message to this topic. The workspace-connector subscriber pulls
-# messages, queries BQ for recent BENIGN emails, and routes them to the
-# escalation queue via /ops/report/submit.
-#
-# Both kraken and workspace-connector run as the same SA (lighthouse@aegis-{tenant}).
 # =============================================================================
 
 locals {
