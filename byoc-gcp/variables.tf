@@ -120,6 +120,16 @@ variable "message_id_queue_config" {
   }
 }
 
+variable "fts_burst_config" {
+  description = "FTS burst retroactive quarantine Pub/Sub infrastructure. Kraken publishes, workspace-connector subscribes."
+  type = object({
+    enabled = optional(bool, false)
+  })
+  default = {
+    enabled = false
+  }
+}
+
 variable "active" {
   description = "Whether this tenant is actively receiving traffic. When false, replicaCount is forced to 0 and the deployment gets label aegisai.ai/active=false."
   type        = bool
