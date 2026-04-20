@@ -49,6 +49,9 @@ resource "google_pubsub_subscription" "gmail_inbox_messages_received" {
     }
   }
 
+  # drop unacked notifications after 30m
+  message_retention_duration = "1800s"
+
   retry_policy {
     minimum_backoff = "30s"
     maximum_backoff = "600s"
