@@ -1,5 +1,5 @@
 locals {
-  aegis_project_id = "friendly-access-450904-h1"
+  aegis_project_id = var.aegis_project_id
 
   aegis_config_deps = {
     base_topic_format  = "projects/%s/topics/email_messages.%s.%%s"
