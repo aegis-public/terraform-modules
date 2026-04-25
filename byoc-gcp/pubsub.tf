@@ -23,7 +23,7 @@ resource "google_pubsub_topic" "gmail_inbox" {
   count = local.is_google_workspace ? 1 : 0
 
   name                       = local.gmail_inbox_topic_name
-  message_retention_duration = "864000s" # 10d
+  message_retention_duration = "1800s" # 30m
 }
 
 # pubsub subscription to deliver gmail inbox notifications to workspace connector
