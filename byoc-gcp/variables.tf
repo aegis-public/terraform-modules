@@ -144,18 +144,12 @@ variable "active" {
 
 variable "gmail_inbox_subscription" {
   description = <<-EOT
-    Tunables for the Gmail inbox push subscription
-    (`<tenant>-gmail-inbox-messages-received`). All fields are optional.
+    Gmail inbox push subscription tunables. Lower values = faster recovery
+    from transient push failures; safe with ack-immediate
+    (EnableGmailAckImmediate=true).
 
-    - ack_deadline_seconds: how long Pub/Sub waits for an HTTP 200 before
-      considering a delivery failed. With ack-immediate enabled in the handler
-      (EnableGmailAckImmediate=true), the handler returns 200 in <100ms after
-      Flush, so a low deadline is safe and caps `oldest_unacked_message_age`
-      on transient push failures. Range: 10-600. Default: 300.
-    - retry_minimum_backoff / retry_maximum_backoff: how long Pub/Sub waits
-      between push retries after a delivery failure. Lower = faster recovery
-      after transient ingress 5xx; higher = less retry pressure during real
-      outages. Defaults: 30s / 300s.
+    - ack_deadline_seconds: 10-600, default 300.
+    - retry_minimum_backoff / retry_maximum_backoff: defaults 30s / 300s.
   EOT
   type = object({
     ack_deadline_seconds  = optional(number, 300)
