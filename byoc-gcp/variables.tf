@@ -142,6 +142,29 @@ variable "active" {
   default     = true
 }
 
+variable "gmail_inbox_subscription" {
+  description = <<-EOT
+    Tunables for the Gmail inbox push subscription
+    (`<tenant>-gmail-inbox-messages-received`). All fields are optional.
+
+    - ack_deadline_seconds: how long Pub/Sub waits for an HTTP 200 before
+      considering a delivery failed. With ack-immediate enabled in the handler
+      (EnableGmailAckImmediate=true), the handler returns 200 in <100ms after
+      Flush, so a low deadline is safe and caps `oldest_unacked_message_age`
+      on transient push failures. Range: 10-600. Default: 600.
+    - retry_minimum_backoff / retry_maximum_backoff: how long Pub/Sub waits
+      between push retries after a delivery failure. Lower = faster recovery
+      after transient ingress 5xx; higher = less retry pressure during real
+      outages. Defaults: 30s / 600s.
+  EOT
+  type = object({
+    ack_deadline_seconds  = optional(number, 600)
+    retry_minimum_backoff = optional(string, "30s")
+    retry_maximum_backoff = optional(string, "600s")
+  })
+  default = {}
+}
+
 variable "sub_tenant_of" {
   description = <<-EOT
     When set, this connector is an MSP sub-tenant that shares its parent's GCP project and

@@ -10,10 +10,10 @@ locals {
   outlook_message_id_queue_enabled = local.is_microsoft_workspace && var.message_id_queue_config.enabled
 
   # Resource name suffixes: scoped for sub-tenants, default for standalone tenants.
-  gmail_inbox_topic_name        = local.is_sub_tenant ? "aegis-gmail-inbox-${local.sub_tenant_suffix}" : "aegis-gmail-inbox"
-  gmail_inbox_sub_name          = local.is_sub_tenant ? "aegis-gmail-inbox-${local.sub_tenant_suffix}-messages-received" : "aegis-gmail-inbox-messages-received"
-  gmail_message_ids_topic_name  = local.is_sub_tenant ? "aegis-gmail-message-ids-${local.sub_tenant_suffix}" : "aegis-gmail-message-ids"
-  gmail_message_ids_sub_name    = local.is_sub_tenant ? "aegis-gmail-message-ids-${local.sub_tenant_suffix}-worker" : "aegis-gmail-message-ids-worker"
+  gmail_inbox_topic_name         = local.is_sub_tenant ? "aegis-gmail-inbox-${local.sub_tenant_suffix}" : "aegis-gmail-inbox"
+  gmail_inbox_sub_name           = local.is_sub_tenant ? "aegis-gmail-inbox-${local.sub_tenant_suffix}-messages-received" : "aegis-gmail-inbox-messages-received"
+  gmail_message_ids_topic_name   = local.is_sub_tenant ? "aegis-gmail-message-ids-${local.sub_tenant_suffix}" : "aegis-gmail-message-ids"
+  gmail_message_ids_sub_name     = local.is_sub_tenant ? "aegis-gmail-message-ids-${local.sub_tenant_suffix}-worker" : "aegis-gmail-message-ids-worker"
   outlook_message_ids_topic_name = local.is_sub_tenant ? "aegis-outlook-message-ids-${local.sub_tenant_suffix}" : "aegis-outlook-message-ids"
   outlook_message_ids_sub_name   = local.is_sub_tenant ? "aegis-outlook-message-ids-${local.sub_tenant_suffix}-worker" : "aegis-outlook-message-ids-worker"
 }
@@ -33,7 +33,11 @@ resource "google_pubsub_subscription" "gmail_inbox_messages_received" {
   name  = local.gmail_inbox_sub_name
   topic = google_pubsub_topic.gmail_inbox[0].name
 
-  ack_deadline_seconds = 600
+  # Tunable via var.gmail_inbox_subscription. Default 600s preserves prior
+  # behaviour; tenants running ack-immediate can drop this to ~30s to cap
+  # oldest_unacked_message_age on transient push failures (handler acks in
+  # <100ms after Flush, so a short deadline is safe).
+  ack_deadline_seconds = var.gmail_inbox_subscription.ack_deadline_seconds
 
   expiration_policy {
     ttl = "" # never expire; connector may be paused (replicaCount=0) and auto-deletion breaks Gmail push
@@ -53,8 +57,8 @@ resource "google_pubsub_subscription" "gmail_inbox_messages_received" {
   message_retention_duration = "1800s"
 
   retry_policy {
-    minimum_backoff = "30s"
-    maximum_backoff = "600s"
+    minimum_backoff = var.gmail_inbox_subscription.retry_minimum_backoff
+    maximum_backoff = var.gmail_inbox_subscription.retry_maximum_backoff
   }
 
 }
