@@ -155,12 +155,12 @@ variable "gmail_inbox_subscription" {
     - retry_minimum_backoff / retry_maximum_backoff: how long Pub/Sub waits
       between push retries after a delivery failure. Lower = faster recovery
       after transient ingress 5xx; higher = less retry pressure during real
-      outages. Defaults: 30s / 600s.
+      outages. Defaults: 30s / 300s.
   EOT
   type = object({
     ack_deadline_seconds  = optional(number, 300)
     retry_minimum_backoff = optional(string, "30s")
-    retry_maximum_backoff = optional(string, "600s")
+    retry_maximum_backoff = optional(string, "300s")
   })
   default = {}
 }
