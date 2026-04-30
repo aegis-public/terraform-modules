@@ -151,14 +151,14 @@ variable "gmail_inbox_subscription" {
       considering a delivery failed. With ack-immediate enabled in the handler
       (EnableGmailAckImmediate=true), the handler returns 200 in <100ms after
       Flush, so a low deadline is safe and caps `oldest_unacked_message_age`
-      on transient push failures. Range: 10-600. Default: 600.
+      on transient push failures. Range: 10-600. Default: 300.
     - retry_minimum_backoff / retry_maximum_backoff: how long Pub/Sub waits
       between push retries after a delivery failure. Lower = faster recovery
       after transient ingress 5xx; higher = less retry pressure during real
       outages. Defaults: 30s / 600s.
   EOT
   type = object({
-    ack_deadline_seconds  = optional(number, 600)
+    ack_deadline_seconds  = optional(number, 300)
     retry_minimum_backoff = optional(string, "30s")
     retry_maximum_backoff = optional(string, "600s")
   })
