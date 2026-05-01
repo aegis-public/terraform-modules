@@ -143,14 +143,7 @@ variable "active" {
 }
 
 variable "gmail_inbox_subscription" {
-  description = <<-EOT
-    Gmail inbox push subscription tunables. Lower values cap
-    oldest_unacked_message_age on transient push failures; safe when the
-    consumer acknowledges the push request before processing.
-
-    - ack_deadline_seconds: 10-600, default 600.
-    - retry_minimum_backoff / retry_maximum_backoff: defaults 30s / 600s.
-  EOT
+  description = "Gmail inbox push subscription tunables (ack deadline, retry backoff)."
   type = object({
     ack_deadline_seconds  = optional(number, 600)
     retry_minimum_backoff = optional(string, "30s")
