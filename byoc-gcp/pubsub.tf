@@ -10,10 +10,10 @@ locals {
   outlook_message_id_queue_enabled = local.is_microsoft_workspace && var.message_id_queue_config.enabled
 
   # Resource name suffixes: scoped for sub-tenants, default for standalone tenants.
-  gmail_inbox_topic_name         = local.is_sub_tenant ? "aegis-gmail-inbox-${local.sub_tenant_suffix}" : "aegis-gmail-inbox"
-  gmail_inbox_sub_name           = local.is_sub_tenant ? "aegis-gmail-inbox-${local.sub_tenant_suffix}-messages-received" : "aegis-gmail-inbox-messages-received"
-  gmail_message_ids_topic_name   = local.is_sub_tenant ? "aegis-gmail-message-ids-${local.sub_tenant_suffix}" : "aegis-gmail-message-ids"
-  gmail_message_ids_sub_name     = local.is_sub_tenant ? "aegis-gmail-message-ids-${local.sub_tenant_suffix}-worker" : "aegis-gmail-message-ids-worker"
+  gmail_inbox_topic_name        = local.is_sub_tenant ? "aegis-gmail-inbox-${local.sub_tenant_suffix}" : "aegis-gmail-inbox"
+  gmail_inbox_sub_name          = local.is_sub_tenant ? "aegis-gmail-inbox-${local.sub_tenant_suffix}-messages-received" : "aegis-gmail-inbox-messages-received"
+  gmail_message_ids_topic_name  = local.is_sub_tenant ? "aegis-gmail-message-ids-${local.sub_tenant_suffix}" : "aegis-gmail-message-ids"
+  gmail_message_ids_sub_name    = local.is_sub_tenant ? "aegis-gmail-message-ids-${local.sub_tenant_suffix}-worker" : "aegis-gmail-message-ids-worker"
   outlook_message_ids_topic_name = local.is_sub_tenant ? "aegis-outlook-message-ids-${local.sub_tenant_suffix}" : "aegis-outlook-message-ids"
   outlook_message_ids_sub_name   = local.is_sub_tenant ? "aegis-outlook-message-ids-${local.sub_tenant_suffix}-worker" : "aegis-outlook-message-ids-worker"
 }
