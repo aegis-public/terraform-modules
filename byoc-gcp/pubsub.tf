@@ -33,10 +33,6 @@ resource "google_pubsub_subscription" "gmail_inbox_messages_received" {
   name  = local.gmail_inbox_sub_name
   topic = google_pubsub_topic.gmail_inbox[0].name
 
-  # Tunable via var.gmail_inbox_subscription. Default 600s preserves prior
-  # behaviour; tenants running ack-immediate can drop this to ~30s to cap
-  # oldest_unacked_message_age on transient push failures (handler acks in
-  # <100ms after Flush, so a short deadline is safe).
   ack_deadline_seconds = var.gmail_inbox_subscription.ack_deadline_seconds
 
   expiration_policy {

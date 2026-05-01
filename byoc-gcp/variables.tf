@@ -144,9 +144,9 @@ variable "active" {
 
 variable "gmail_inbox_subscription" {
   description = <<-EOT
-    Gmail inbox push subscription tunables. Defaults are no-op vs v0.3.15;
-    tenants on ack-immediate (EnableGmailAckImmediate=true) can tighten to
-    cap oldest_unacked_message_age on transient push failures.
+    Gmail inbox push subscription tunables. Lower values cap
+    oldest_unacked_message_age on transient push failures; safe when the
+    consumer acknowledges the push request before processing.
 
     - ack_deadline_seconds: 10-600, default 600.
     - retry_minimum_backoff / retry_maximum_backoff: defaults 30s / 600s.
