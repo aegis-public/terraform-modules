@@ -144,17 +144,17 @@ variable "active" {
 
 variable "gmail_inbox_subscription" {
   description = <<-EOT
-    Gmail inbox push subscription tunables. Lower values = faster recovery
-    from transient push failures; safe with ack-immediate
-    (EnableGmailAckImmediate=true).
+    Gmail inbox push subscription tunables. Defaults are no-op vs v0.3.15;
+    tenants on ack-immediate (EnableGmailAckImmediate=true) can tighten to
+    cap oldest_unacked_message_age on transient push failures.
 
-    - ack_deadline_seconds: 10-600, default 300.
-    - retry_minimum_backoff / retry_maximum_backoff: defaults 30s / 300s.
+    - ack_deadline_seconds: 10-600, default 600.
+    - retry_minimum_backoff / retry_maximum_backoff: defaults 30s / 600s.
   EOT
   type = object({
-    ack_deadline_seconds  = optional(number, 300)
+    ack_deadline_seconds  = optional(number, 600)
     retry_minimum_backoff = optional(string, "30s")
-    retry_maximum_backoff = optional(string, "300s")
+    retry_maximum_backoff = optional(string, "600s")
   })
   default = {}
 }
