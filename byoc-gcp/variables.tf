@@ -142,6 +142,23 @@ variable "active" {
   default     = true
 }
 
+variable "gmail_inbox_subscription" {
+  description = <<-EOT
+    Gmail inbox push subscription tunables. Lower values cap
+    oldest_unacked_message_age on transient push failures; safe when the
+    consumer acknowledges the push request before processing.
+
+    - ack_deadline_seconds: 10-600, default 600.
+    - retry_minimum_backoff / retry_maximum_backoff: defaults 30s / 600s.
+  EOT
+  type = object({
+    ack_deadline_seconds  = optional(number, 600)
+    retry_minimum_backoff = optional(string, "30s")
+    retry_maximum_backoff = optional(string, "600s")
+  })
+  default = {}
+}
+
 variable "sub_tenant_of" {
   description = <<-EOT
     When set, this connector is an MSP sub-tenant that shares its parent's GCP project and
