@@ -36,6 +36,8 @@ locals {
     AEGIS_EMAIL_DOMAINS  = join(",", var.app_config.email_domains)
     AEGIS_BASE_URL       = var.helm_ingress_url
 
+    AEGIS_AEGIS_CUSTOMER_ID = var.app_config.customer_id
+
     AEGIS_GOOGLE_SERVICE_ACCOUNT_EMAIL   = local.workspace_connector_sa_email
     AEGIS_GOOGLE_ADMIN_EMAIL_ADDRESS     = try(var.app_config.google_workspace_config.admin_email_address, null)
     AEGIS_GOOGLE_TOPIC_GMAIL_INBOX_WATCH = try(google_pubsub_topic.gmail_inbox[0].id, null)
@@ -79,7 +81,7 @@ resource "helm_release" "workspace_connector" {
   name             = local.helm_release_name
   repository       = "https://aegis-public.github.io/helm-charts"
   chart            = "workspace-connector"
-  version          = "0.1.30"
+  version          = "0.1.31"
   namespace        = var.kubernetes_namespace
   create_namespace = true
 

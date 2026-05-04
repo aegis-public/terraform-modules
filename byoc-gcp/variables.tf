@@ -54,6 +54,7 @@ variable "app_config" {
   type = object({
     access_mode              = optional(string, "readonly")
     operational_mode         = optional(string, "readonly")
+    customer_id              = optional(string, null)
     workspace_kind           = string
     email_addresses          = list(string)
     excluded_email_addresses = optional(list(string), [])
