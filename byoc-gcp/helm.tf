@@ -27,6 +27,8 @@ locals {
       "postgresql://default:${module.sql_db[0].generated_user_password}@localhost:5432/default?sslmode=disable"
     )
 
+    AEGIS_TENANT_ID = var.aegis_tenant_id
+
     AEGIS_ACCESS_MODE              = var.app_config.access_mode
     AEGIS_OPERATIONAL_MODE         = var.app_config.operational_mode
     AEGIS_EMAIL_ADDRESSES          = join(",", var.app_config.email_addresses)
@@ -79,7 +81,7 @@ resource "helm_release" "workspace_connector" {
   name             = local.helm_release_name
   repository       = "https://aegis-public.github.io/helm-charts"
   chart            = "workspace-connector"
-  version          = "0.1.30"
+  version          = "0.1.31"
   namespace        = var.kubernetes_namespace
   create_namespace = true
 
