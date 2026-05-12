@@ -148,6 +148,10 @@ resource "google_pubsub_subscription" "outlook_message_ids" {
   message_retention_duration = "604800s" # 7 days
   enable_message_ordering    = true
 
+  expiration_policy {
+    ttl = "" # never expire; connector may be paused (replicaCount=0) and auto-deletion breaks message processing
+  }
+
   retry_policy {
     minimum_backoff = "10s"
     maximum_backoff = "600s"
