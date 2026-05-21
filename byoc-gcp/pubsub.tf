@@ -7,20 +7,21 @@ locals {
   is_microsoft_workspace = var.app_config.workspace_kind == "microsoft"
 
   gmail_message_id_queue_enabled   = local.is_google_workspace && var.message_id_queue_config.enabled
+  gmail_inbox_sub_enabled          = local.is_google_workspace && (var.create_gmail_subscription != null ? var.create_gmail_subscription : var.active)
   outlook_message_id_queue_enabled = local.is_microsoft_workspace && var.message_id_queue_config.enabled
 
   # Resource name suffixes: scoped for sub-tenants, default for standalone tenants.
-  gmail_inbox_topic_name        = local.is_sub_tenant ? "aegis-gmail-inbox-${local.sub_tenant_suffix}" : "aegis-gmail-inbox"
-  gmail_inbox_sub_name          = local.is_sub_tenant ? "aegis-gmail-inbox-${local.sub_tenant_suffix}-messages-received" : "aegis-gmail-inbox-messages-received"
-  gmail_message_ids_topic_name  = local.is_sub_tenant ? "aegis-gmail-message-ids-${local.sub_tenant_suffix}" : "aegis-gmail-message-ids"
-  gmail_message_ids_sub_name    = local.is_sub_tenant ? "aegis-gmail-message-ids-${local.sub_tenant_suffix}-worker" : "aegis-gmail-message-ids-worker"
+  gmail_inbox_topic_name         = local.is_sub_tenant ? "aegis-gmail-inbox-${local.sub_tenant_suffix}" : "aegis-gmail-inbox"
+  gmail_inbox_sub_name           = local.is_sub_tenant ? "aegis-gmail-inbox-${local.sub_tenant_suffix}-messages-received" : "aegis-gmail-inbox-messages-received"
+  gmail_message_ids_topic_name   = local.is_sub_tenant ? "aegis-gmail-message-ids-${local.sub_tenant_suffix}" : "aegis-gmail-message-ids"
+  gmail_message_ids_sub_name     = local.is_sub_tenant ? "aegis-gmail-message-ids-${local.sub_tenant_suffix}-worker" : "aegis-gmail-message-ids-worker"
   outlook_message_ids_topic_name = local.is_sub_tenant ? "aegis-outlook-message-ids-${local.sub_tenant_suffix}" : "aegis-outlook-message-ids"
   outlook_message_ids_sub_name   = local.is_sub_tenant ? "aegis-outlook-message-ids-${local.sub_tenant_suffix}-worker" : "aegis-outlook-message-ids-worker"
 }
 
 # pubsub topic to receive gmail inbox notifications
 resource "google_pubsub_topic" "gmail_inbox" {
-  count = local.is_google_workspace ? 1 : 0
+  count = local.gmail_inbox_sub_enabled ? 1 : 0
 
   name                       = local.gmail_inbox_topic_name
   message_retention_duration = "1800s" # 30m
@@ -28,7 +29,7 @@ resource "google_pubsub_topic" "gmail_inbox" {
 
 # pubsub subscription to deliver gmail inbox notifications to workspace connector
 resource "google_pubsub_subscription" "gmail_inbox_messages_received" {
-  count = local.is_google_workspace ? 1 : 0
+  count = local.gmail_inbox_sub_enabled ? 1 : 0
 
   name  = local.gmail_inbox_sub_name
   topic = google_pubsub_topic.gmail_inbox[0].name
@@ -61,7 +62,7 @@ resource "google_pubsub_subscription" "gmail_inbox_messages_received" {
 
 # permission for system gmail service account to publish to the topic
 resource "google_pubsub_topic_iam_member" "gmail_publisher" {
-  count = local.is_google_workspace ? 1 : 0
+  count = local.gmail_inbox_sub_enabled ? 1 : 0
 
   topic  = google_pubsub_topic.gmail_inbox[0].name
   role   = "roles/pubsub.publisher"
