@@ -81,7 +81,7 @@ resource "helm_release" "workspace_connector" {
   name             = local.helm_release_name
   repository       = "https://aegis-public.github.io/helm-charts"
   chart            = "workspace-connector"
-  version          = "0.1.33"
+  version          = "0.1.34"
   namespace        = var.kubernetes_namespace
   create_namespace = true
 
@@ -102,6 +102,7 @@ resource "helm_release" "workspace_connector" {
     var.active ? [] : [yamlencode({
       replicaCount = 0
       labels       = { "aegisai.ai/active" = "false" }
+      cronJobs     = { refreshPubsub = { suspend = true } }
     })],
     [yamlencode(var.helm_values)],
   )
