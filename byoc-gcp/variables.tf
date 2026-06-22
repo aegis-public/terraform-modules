@@ -142,6 +142,12 @@ variable "active" {
   default     = true
 }
 
+variable "create_gmail_subscription" {
+  description = "Whether to create the Gmail inbox topic, subscription, and IAM. Defaults to var.active — set explicitly to override."
+  type        = bool
+  default     = null
+}
+
 variable "gmail_inbox_subscription" {
   description = "Gmail inbox push subscription tunables (ack deadline, retry backoff)."
   type = object({
