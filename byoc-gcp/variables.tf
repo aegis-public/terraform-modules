@@ -158,6 +158,27 @@ variable "gmail_inbox_subscription" {
   default = {}
 }
 
+variable "gmail_inbox_pull_subscription" {
+  description = "Gmail inbox PULL subscription tunables (ack deadline, retry backoff). Independent of gmail_inbox_subscription so the push and pull subs can be tuned separately. Default ack deadline 120s (the pull client auto-extends while processing, so the initial deadline matters less than on push); retry backoff mirrors the push defaults."
+  type = object({
+    ack_deadline_seconds  = optional(number, 120)
+    retry_minimum_backoff = optional(string, "30s")
+    retry_maximum_backoff = optional(string, "600s")
+  })
+  default = {}
+}
+
+variable "gmail_delivery_mode" {
+  description = "Which Pub/Sub transport the connector processes Gmail inbox notifications with: \"push\" (HTTP webhook) or \"pull\" (pull worker). The inactive transport acks-and-drops. Renders AEGIS_GMAIL_DELIVERY_MODE on Google tenants. Default \"push\"; set \"pull\" per tenant to cut over."
+  type        = string
+  default     = "push"
+
+  validation {
+    condition     = contains(["push", "pull"], var.gmail_delivery_mode)
+    error_message = "gmail_delivery_mode must be \"push\" or \"pull\"."
+  }
+}
+
 variable "sub_tenant_of" {
   description = <<-EOT
     When set, this connector is an MSP sub-tenant that shares its parent's GCP project and

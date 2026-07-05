@@ -64,9 +64,17 @@ locals {
     )
   }
 
+  # Gmail pull-transport env — only on Google tenants (where the pull sub exists).
+  # AEGIS_GMAIL_INBOX_PULL_SUBSCRIPTION: short name (Go resolves the project from
+  # the topic id). AEGIS_GMAIL_DELIVERY_MODE: the per-tenant cutover switch.
+  gmail_pull_env_vars = local.gmail_inbox_sub_enabled ? {
+    AEGIS_GMAIL_INBOX_PULL_SUBSCRIPTION = google_pubsub_subscription.gmail_inbox_pull[0].name
+    AEGIS_GMAIL_DELIVERY_MODE           = var.gmail_delivery_mode
+  } : {}
+
   inferred_helm_values = {
     config = {
-      env = merge(local.inferred_env_vars, var.app_config.env)
+      env = merge(local.inferred_env_vars, local.gmail_pull_env_vars, var.app_config.env)
     }
   }
 }

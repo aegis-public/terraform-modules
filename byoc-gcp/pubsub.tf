@@ -13,6 +13,7 @@ locals {
   # Resource name suffixes: scoped for sub-tenants, default for standalone tenants.
   gmail_inbox_topic_name         = local.is_sub_tenant ? "aegis-gmail-inbox-${local.sub_tenant_suffix}" : "aegis-gmail-inbox"
   gmail_inbox_sub_name           = local.is_sub_tenant ? "aegis-gmail-inbox-${local.sub_tenant_suffix}-messages-received" : "aegis-gmail-inbox-messages-received"
+  gmail_inbox_pull_sub_name      = local.is_sub_tenant ? "aegis-gmail-inbox-${local.sub_tenant_suffix}-pull" : "aegis-gmail-inbox-pull"
   gmail_message_ids_topic_name   = local.is_sub_tenant ? "aegis-gmail-message-ids-${local.sub_tenant_suffix}" : "aegis-gmail-message-ids"
   gmail_message_ids_sub_name     = local.is_sub_tenant ? "aegis-gmail-message-ids-${local.sub_tenant_suffix}-worker" : "aegis-gmail-message-ids-worker"
   outlook_message_ids_topic_name = local.is_sub_tenant ? "aegis-outlook-message-ids-${local.sub_tenant_suffix}" : "aegis-outlook-message-ids"
@@ -67,6 +68,47 @@ resource "google_pubsub_topic_iam_member" "gmail_publisher" {
   topic  = google_pubsub_topic.gmail_inbox[0].name
   role   = "roles/pubsub.publisher"
   member = "serviceAccount:gmail-api-push@system.gserviceaccount.com"
+}
+
+# Pull subscription on the same gmail-inbox topic (push→pull migration).
+# Coexists with the push sub above; Pub/Sub fan-out gives each an independent
+# copy of every notification. The connector's gmailinboxpull worker subscribes;
+# whether it *processes* (vs acks-and-drops) is gated by AEGIS_GMAIL_DELIVERY_MODE.
+resource "google_pubsub_subscription" "gmail_inbox_pull" {
+  count = local.gmail_inbox_sub_enabled ? 1 : 0
+
+  name  = local.gmail_inbox_pull_sub_name
+  topic = google_pubsub_topic.gmail_inbox[0].name
+
+  ack_deadline_seconds = var.gmail_inbox_pull_subscription.ack_deadline_seconds
+
+  # 7d backstop: unlike the push sub (Pub/Sub retries delivery to the HTTP
+  # endpoint), a down pull worker leaves notifications unacked. A long retention
+  # lets the history poller + integrity check recover before anything is dropped.
+  message_retention_duration = "604800s" # 7 days
+
+  expiration_policy {
+    ttl = "" # never expire; connector may be paused (replicaCount=0)
+  }
+
+  retry_policy {
+    minimum_backoff = var.gmail_inbox_pull_subscription.retry_minimum_backoff
+    maximum_backoff = var.gmail_inbox_pull_subscription.retry_maximum_backoff
+  }
+}
+
+# Pull needs an explicit subscriber binding (push authenticates via oidc_token,
+# so the push sub has none). Mirrors gmail_message_ids_subscriber.
+resource "google_pubsub_subscription_iam_member" "gmail_inbox_pull_subscriber" {
+  count = local.gmail_inbox_sub_enabled ? 1 : 0
+
+  subscription = google_pubsub_subscription.gmail_inbox_pull[0].name
+  role         = "roles/pubsub.subscriber"
+  member       = "serviceAccount:${local.workspace_connector_sa_email}"
+
+  lifecycle {
+    replace_triggered_by = [google_pubsub_subscription.gmail_inbox_pull[0]]
+  }
 }
 
 # =============================================================================
