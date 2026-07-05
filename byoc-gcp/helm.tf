@@ -43,6 +43,11 @@ locals {
     AEGIS_GOOGLE_TOPIC_GMAIL_INBOX_WATCH = try(google_pubsub_topic.gmail_inbox[0].id, null)
     AEGIS_GOOGLE_GMAIL_LABEL_NAMES       = try(jsonencode(var.app_config.google_workspace_config.gmail_label_names), null)
 
+    # Gmail push->pull migration: pull sub short name (Go resolves the project from
+    # the topic id) + the per-tenant delivery-mode switch; null on non-Google tenants.
+    AEGIS_GMAIL_INBOX_PULL_SUBSCRIPTION = try(google_pubsub_subscription.gmail_inbox_pull[0].name, null)
+    AEGIS_GMAIL_DELIVERY_MODE           = local.gmail_inbox_sub_enabled ? var.gmail_delivery_mode : null
+
     AEGIS_MICROSOFT_TENANT_ID     = try(var.app_config.microsoft_workspace_config.tenant_id, null)
     AEGIS_MICROSOFT_CLIENT_ID     = try(var.app_config.microsoft_workspace_config.client_id, null)
     AEGIS_MICROSOFT_CLIENT_SECRET = try(var.app_config.microsoft_workspace_config.client_secret, null)
@@ -64,17 +69,9 @@ locals {
     )
   }
 
-  # Gmail pull-transport env — only on Google tenants (where the pull sub exists).
-  # AEGIS_GMAIL_INBOX_PULL_SUBSCRIPTION: short name (Go resolves the project from
-  # the topic id). AEGIS_GMAIL_DELIVERY_MODE: the per-tenant cutover switch.
-  gmail_pull_env_vars = local.gmail_inbox_sub_enabled ? {
-    AEGIS_GMAIL_INBOX_PULL_SUBSCRIPTION = google_pubsub_subscription.gmail_inbox_pull[0].name
-    AEGIS_GMAIL_DELIVERY_MODE           = var.gmail_delivery_mode
-  } : {}
-
   inferred_helm_values = {
     config = {
-      env = merge(local.inferred_env_vars, local.gmail_pull_env_vars, var.app_config.env)
+      env = merge(local.inferred_env_vars, var.app_config.env)
     }
   }
 }
