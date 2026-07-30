@@ -159,13 +159,22 @@ variable "gmail_inbox_subscription" {
 }
 
 variable "gmail_inbox_pull_subscription" {
-  description = "Gmail inbox PULL subscription tunables (ack deadline, retry backoff). Independent of gmail_inbox_subscription so the push and pull subs can be tuned separately. Default ack deadline 120s (the pull client auto-extends while processing, so the initial deadline matters less than on push); retry backoff mirrors the push defaults."
+  description = "Gmail inbox PULL subscription tunables (ack deadline, retry backoff, message retention). Independent of gmail_inbox_subscription so the push and pull subs can be tuned separately. Default ack deadline 120s (the pull client auto-extends while processing, so the initial deadline matters less than on push). Retention defaults to 30m as an age backstop on stuck notifications, and min backoff to 10s so a NACKed notification redelivers promptly."
   type = object({
-    ack_deadline_seconds  = optional(number, 120)
-    retry_minimum_backoff = optional(string, "30s")
-    retry_maximum_backoff = optional(string, "600s")
+    ack_deadline_seconds       = optional(number, 120)
+    retry_minimum_backoff      = optional(string, "10s")
+    retry_maximum_backoff      = optional(string, "600s")
+    message_retention_duration = optional(string, "1800s")
   })
   default = {}
+
+  validation {
+    condition = (
+      can(regex("^[0-9]+s$", var.gmail_inbox_pull_subscription.message_retention_duration)) &&
+      try(tonumber(trimsuffix(var.gmail_inbox_pull_subscription.message_retention_duration, "s")), 0) >= 600
+    )
+    error_message = "gmail_inbox_pull_subscription.message_retention_duration must be a seconds string >= 600s (Pub/Sub minimum is 10m)."
+  }
 }
 
 variable "gmail_delivery_mode" {

@@ -82,10 +82,9 @@ resource "google_pubsub_subscription" "gmail_inbox_pull" {
 
   ack_deadline_seconds = var.gmail_inbox_pull_subscription.ack_deadline_seconds
 
-  # 7d backstop: unlike the push sub (Pub/Sub retries delivery to the HTTP
-  # endpoint), a down pull worker leaves notifications unacked. A long retention
-  # lets the history poller + integrity check recover before anything is dropped.
-  message_retention_duration = "604800s" # 7 days
+  # Age backstop: there is no DLQ, so an unacked notification is dropped once it
+  # ages out. The history poller and integrity check are the recovery path.
+  message_retention_duration = var.gmail_inbox_pull_subscription.message_retention_duration
 
   expiration_policy {
     ttl = "" # never expire; connector may be paused (replicaCount=0)
