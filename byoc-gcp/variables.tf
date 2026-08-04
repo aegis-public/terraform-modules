@@ -188,6 +188,12 @@ variable "gmail_delivery_mode" {
   }
 }
 
+variable "enable_mcs_service_export" {
+  description = "Export the connector Service fleet-wide via GKE Multi-Cluster Services."
+  type        = bool
+  default     = false
+}
+
 variable "sub_tenant_of" {
   description = <<-EOT
     When set, this connector is an MSP sub-tenant that shares its parent's GCP project and
