@@ -148,18 +148,8 @@ variable "create_gmail_subscription" {
   default     = null
 }
 
-variable "gmail_inbox_subscription" {
-  description = "Gmail inbox push subscription tunables (ack deadline, retry backoff)."
-  type = object({
-    ack_deadline_seconds  = optional(number, 600)
-    retry_minimum_backoff = optional(string, "30s")
-    retry_maximum_backoff = optional(string, "600s")
-  })
-  default = {}
-}
-
 variable "gmail_inbox_pull_subscription" {
-  description = "Gmail inbox PULL subscription tunables (ack deadline, retry backoff, message retention). Independent of gmail_inbox_subscription so the push and pull subs can be tuned separately. Default ack deadline 120s (the pull client auto-extends while processing, so the initial deadline matters less than on push). Retention defaults to 30m as an age backstop on stuck notifications, and min backoff to 10s so a NACKed notification redelivers promptly."
+  description = "Gmail inbox pull subscription tunables (ack deadline, retry backoff, message retention). Default ack deadline 120s, since the pull client auto-extends while processing. Retention defaults to 30m as an age backstop on stuck notifications, and min backoff to 10s so a NACKed notification redelivers promptly."
   type = object({
     ack_deadline_seconds       = optional(number, 120)
     retry_minimum_backoff      = optional(string, "10s")
@@ -174,17 +164,6 @@ variable "gmail_inbox_pull_subscription" {
       try(tonumber(trimsuffix(var.gmail_inbox_pull_subscription.message_retention_duration, "s")), 0) >= 600
     )
     error_message = "gmail_inbox_pull_subscription.message_retention_duration must be a seconds string >= 600s (Pub/Sub minimum is 10m)."
-  }
-}
-
-variable "gmail_delivery_mode" {
-  description = "Which Pub/Sub transport the connector processes Gmail inbox notifications with: \"push\" (HTTP webhook) or \"pull\" (pull worker). The inactive transport acks-and-drops. Renders AEGIS_GMAIL_DELIVERY_MODE on Google tenants. Default \"push\"; set \"pull\" per tenant to cut over."
-  type        = string
-  default     = "push"
-
-  validation {
-    condition     = contains(["push", "pull"], var.gmail_delivery_mode)
-    error_message = "gmail_delivery_mode must be \"push\" or \"pull\"."
   }
 }
 
