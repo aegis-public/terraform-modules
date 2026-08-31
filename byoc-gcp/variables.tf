@@ -127,12 +127,24 @@ variable "message_id_queue_config" {
 }
 
 variable "fts_burst_config" {
-  description = "FTS burst retroactive quarantine Pub/Sub infrastructure. Kraken publishes, workspace-connector subscribes."
+  description = <<-EOT
+    FTS burst Pub/Sub infrastructure. Kraken publishes, workspace-connector subscribes.
+
+    Two paths, switchable independently:
+      enabled       - retroactive quarantine. Kraken publishes only on the
+                      threshold-crossing message, and only once the burst rule is
+                      past its rollout gate.
+      alert_enabled - outbound SIEM alert. Kraken publishes every over-bar
+                      observation and is not subject to the rollout gate, so a
+                      customer can be alerted while quarantine is still off.
+  EOT
   type = object({
-    enabled = optional(bool, false)
+    enabled       = optional(bool, false)
+    alert_enabled = optional(bool, false)
   })
   default = {
-    enabled = false
+    enabled       = false
+    alert_enabled = false
   }
 }
 
