@@ -127,12 +127,24 @@ variable "message_id_queue_config" {
 }
 
 variable "fts_burst_config" {
-  description = "FTS burst retroactive quarantine Pub/Sub infrastructure. Kraken publishes, workspace-connector subscribes."
+  description = <<-EOT
+    FTS burst Pub/Sub infrastructure. Kraken publishes, workspace-connector subscribes.
+
+    Two paths, switchable independently:
+      enabled       - retroactive quarantine. Kraken publishes only on the
+                      threshold-crossing message, and only once the burst rule is
+                      past its rollout gate.
+      alert_enabled - outbound SIEM alert. Kraken publishes every over-bar
+                      observation and is not subject to the rollout gate, so a
+                      customer can be alerted while quarantine is still off.
+  EOT
   type = object({
-    enabled = optional(bool, false)
+    enabled       = optional(bool, false)
+    alert_enabled = optional(bool, false)
   })
   default = {
-    enabled = false
+    enabled       = false
+    alert_enabled = false
   }
 }
 
@@ -148,35 +160,29 @@ variable "create_gmail_subscription" {
   default     = null
 }
 
-variable "gmail_inbox_subscription" {
-  description = "Gmail inbox push subscription tunables (ack deadline, retry backoff)."
-  type = object({
-    ack_deadline_seconds  = optional(number, 600)
-    retry_minimum_backoff = optional(string, "30s")
-    retry_maximum_backoff = optional(string, "600s")
-  })
-  default = {}
-}
-
 variable "gmail_inbox_pull_subscription" {
-  description = "Gmail inbox PULL subscription tunables (ack deadline, retry backoff). Independent of gmail_inbox_subscription so the push and pull subs can be tuned separately. Default ack deadline 120s (the pull client auto-extends while processing, so the initial deadline matters less than on push); retry backoff mirrors the push defaults."
+  description = "Gmail inbox pull subscription tunables (ack deadline, retry backoff, message retention). Default ack deadline 120s, since the pull client auto-extends while processing. Retention defaults to 30m as an age backstop on stuck notifications, and min backoff to 10s so a NACKed notification redelivers promptly."
   type = object({
-    ack_deadline_seconds  = optional(number, 120)
-    retry_minimum_backoff = optional(string, "30s")
-    retry_maximum_backoff = optional(string, "600s")
+    ack_deadline_seconds       = optional(number, 120)
+    retry_minimum_backoff      = optional(string, "10s")
+    retry_maximum_backoff      = optional(string, "600s")
+    message_retention_duration = optional(string, "1800s")
   })
   default = {}
-}
-
-variable "gmail_delivery_mode" {
-  description = "Which Pub/Sub transport the connector processes Gmail inbox notifications with: \"push\" (HTTP webhook) or \"pull\" (pull worker). The inactive transport acks-and-drops. Renders AEGIS_GMAIL_DELIVERY_MODE on Google tenants. Default \"push\"; set \"pull\" per tenant to cut over."
-  type        = string
-  default     = "push"
 
   validation {
-    condition     = contains(["push", "pull"], var.gmail_delivery_mode)
-    error_message = "gmail_delivery_mode must be \"push\" or \"pull\"."
+    condition = (
+      can(regex("^[0-9]+s$", var.gmail_inbox_pull_subscription.message_retention_duration)) &&
+      try(tonumber(trimsuffix(var.gmail_inbox_pull_subscription.message_retention_duration, "s")), 0) >= 600
+    )
+    error_message = "gmail_inbox_pull_subscription.message_retention_duration must be a seconds string >= 600s (Pub/Sub minimum is 10m)."
   }
+}
+
+variable "enable_mcs_service_export" {
+  description = "Export the connector Service fleet-wide via GKE Multi-Cluster Services."
+  type        = bool
+  default     = false
 }
 
 variable "sub_tenant_of" {

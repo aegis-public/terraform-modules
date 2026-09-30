@@ -43,10 +43,9 @@ locals {
     AEGIS_GOOGLE_TOPIC_GMAIL_INBOX_WATCH = try(google_pubsub_topic.gmail_inbox[0].id, null)
     AEGIS_GOOGLE_GMAIL_LABEL_NAMES       = try(jsonencode(var.app_config.google_workspace_config.gmail_label_names), null)
 
-    # Gmail push->pull migration: pull sub short name (Go resolves the project from
-    # the topic id) + the per-tenant delivery-mode switch; null on non-Google tenants.
+    # Pull sub short name; Go resolves the project from the topic id. Null on
+    # non-Google tenants, which is also what gates the pull worker's startup.
     AEGIS_GMAIL_INBOX_PULL_SUBSCRIPTION = try(google_pubsub_subscription.gmail_inbox_pull[0].name, null)
-    AEGIS_GMAIL_DELIVERY_MODE           = local.gmail_inbox_sub_enabled ? var.gmail_delivery_mode : null
 
     AEGIS_MICROSOFT_TENANT_ID     = try(var.app_config.microsoft_workspace_config.tenant_id, null)
     AEGIS_MICROSOFT_CLIENT_ID     = try(var.app_config.microsoft_workspace_config.client_id, null)
@@ -86,7 +85,7 @@ resource "helm_release" "workspace_connector" {
   name             = local.helm_release_name
   repository       = "https://aegis-public.github.io/helm-charts"
   chart            = "workspace-connector"
-  version          = "0.1.35"
+  version          = "0.1.38"
   namespace        = var.kubernetes_namespace
   create_namespace = true
 
@@ -109,6 +108,7 @@ resource "helm_release" "workspace_connector" {
       labels       = { "aegisai.ai/active" = "false" }
       cronJobs     = { refreshPubsub = { suspend = true } }
     })],
+    [yamlencode({ serviceExport = { enabled = var.enable_mcs_service_export } })],
     [yamlencode(var.helm_values)],
   )
 
