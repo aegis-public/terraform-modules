@@ -107,7 +107,7 @@ variable "gcp_service_account_id" {
 }
 
 variable "lakehouse_config" {
-  description = "Lakehouse streaming configuration"
+  description = "Lakehouse v1 reporting configuration — gates the historical reporting.flagged dataset/table"
   type = object({
     enabled = optional(bool, false)
   })
