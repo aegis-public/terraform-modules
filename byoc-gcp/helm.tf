@@ -23,7 +23,10 @@ locals {
 
 locals {
   inferred_env_vars = {
-    AEGIS_DATABASE_URL = var.database.url != null ? var.database.url : (
+    # With external_secrets the URL carries no password; pgx takes it from PGPASSWORD.
+    AEGIS_DATABASE_URL = var.external_secrets != null ? (
+      "postgresql://${local.external_secret_db.user}@localhost:5432/postgres?sslmode=disable&search_path=${local.external_secret_db.schema}"
+      ) : var.database.url != null ? var.database.url : (
       "postgresql://default:${module.sql_db[0].generated_user_password}@localhost:5432/default?sslmode=disable"
     )
 
@@ -68,11 +71,34 @@ locals {
     )
   }
 
-  inferred_helm_values = {
-    config = {
-      env = merge(local.inferred_env_vars, var.app_config.env)
-    }
+  external_secret_db = var.external_secrets == null ? null : {
+    user            = coalesce(var.external_secrets.database.user, var.aegis_tenant_id)
+    schema          = coalesce(var.external_secrets.database.schema, var.external_secrets.database.user, var.aegis_tenant_id)
+    password_secret = coalesce(var.external_secrets.database.password_secret, "${var.aegis_tenant_id}-postgresql-password")
   }
+
+  external_secret_env = var.external_secrets == null ? {} : merge(
+    var.external_secrets.env,
+    { PGPASSWORD = local.external_secret_db.password_secret },
+  )
+
+  inferred_helm_values = merge(
+    {
+      config = {
+        # envFrom loses to env on a shared name, so secret-backed keys leave env.
+        env = {
+          for name, value in merge(local.inferred_env_vars, var.app_config.env) : name => value
+          if !contains(keys(local.external_secret_env), name)
+        }
+      }
+    },
+    var.external_secrets == null ? {} : {
+      externalSecret = {
+        enabled = true
+        env     = local.external_secret_env
+      }
+    },
+  )
 }
 
 locals {
@@ -85,9 +111,10 @@ resource "helm_release" "workspace_connector" {
   name             = local.helm_release_name
   repository       = "https://aegis-public.github.io/helm-charts"
   chart            = "workspace-connector"
-  version          = "0.1.38"
+  version          = "0.1.39"
   namespace        = var.kubernetes_namespace
   create_namespace = true
+  max_history      = 10
 
   values = concat(
     [

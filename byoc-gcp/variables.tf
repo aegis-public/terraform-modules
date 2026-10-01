@@ -44,8 +44,32 @@ variable "database" {
   })
   default = {}
   validation {
-    condition     = var.database.create || var.database.url != null
-    error_message = "database.url must be provided when database.create is false"
+    condition     = var.database.create || var.database.url != null || var.external_secrets != null
+    error_message = "database.url or external_secrets must be provided when database.create is false"
+  }
+  validation {
+    condition     = var.external_secrets == null || (!var.database.create && var.database.url == null)
+    error_message = "external_secrets replaces database.url and needs database.create = false"
+  }
+}
+
+variable "external_secrets" {
+  description = "Read secrets from the tenant's Secret Manager through External Secrets, so Terraform only handles their names. The database user, schema and password secret default to the tenant ID; env maps an env var name to a Secret Manager secret name."
+  type = object({
+    database = optional(object({
+      user            = optional(string)
+      schema          = optional(string)
+      password_secret = optional(string)
+    }), {})
+    env = optional(map(string), {})
+  })
+  default = null
+  validation {
+    condition = (
+      var.external_secrets == null || var.sub_tenant_of == null ||
+      (try(var.external_secrets.database.user, null) != null && try(var.external_secrets.database.password_secret, null) != null)
+    )
+    error_message = "sub-tenants must set external_secrets.database.user and password_secret"
   }
 }
 
@@ -72,7 +96,7 @@ variable "app_config" {
     microsoft_workspace_config = optional(object({
       tenant_id     = string
       client_id     = string
-      client_state  = string
+      client_state  = optional(string)
       client_secret = optional(string, "")
     }), null)
   })
@@ -91,6 +115,14 @@ variable "app_config" {
   validation {
     condition     = var.app_config.workspace_kind == "microsoft" ? var.app_config.microsoft_workspace_config != null : true
     error_message = "microsoft_workspace_config must be provided if workspace_kind is microsoft"
+  }
+  validation {
+    condition = (
+      try(var.app_config.microsoft_workspace_config.client_state, null) != null ||
+      var.app_config.microsoft_workspace_config == null ||
+      contains(keys(try(var.external_secrets.env, {})), "AEGIS_MICROSOFT_CLIENT_STATE")
+    )
+    error_message = "microsoft_workspace_config.client_state or external_secrets.env.AEGIS_MICROSOFT_CLIENT_STATE must be provided"
   }
   validation {
     condition     = length(var.app_config.email_domains) > 0
