@@ -242,3 +242,9 @@ variable "sub_tenant_of" {
   type        = string
   default     = null
 }
+
+variable "manage_namespace" {
+  description = "Create the Kubernetes namespace here. Off, the installer of the release creates it (byoc-gcp-release does). Sub-tenants never create one: they share the parent's."
+  type        = bool
+  default     = false
+}
