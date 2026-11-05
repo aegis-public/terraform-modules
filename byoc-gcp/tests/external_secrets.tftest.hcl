@@ -15,7 +15,7 @@ mock_provider "google" {
     }
   }
 }
-mock_provider "helm" {}
+mock_provider "kubernetes" {}
 
 variables {
   message_id_queue_config = { enabled = true }
@@ -38,11 +38,11 @@ variables {
 run "off_is_unchanged" {
   command = apply
   assert {
-    condition     = yamldecode(helm_release.workspace_connector.values[0]) == { config = { env = merge(local.inferred_env_vars, var.app_config.env) } }
+    condition     = yamldecode(local.connector_helm_values[0]) == { config = { env = merge(local.inferred_env_vars, var.app_config.env) } }
     error_message = "without external_secrets the Helm values must be exactly today's"
   }
   assert {
-    condition     = yamldecode(helm_release.workspace_connector.values[0]).config.env.AEGIS_DATABASE_URL == var.database.url
+    condition     = yamldecode(local.connector_helm_values[0]).config.env.AEGIS_DATABASE_URL == var.database.url
     error_message = "the passed URL must still reach the pod"
   }
 }
@@ -54,11 +54,11 @@ run "on_google_defaults" {
     external_secrets = {}
   }
   assert {
-    condition     = yamldecode(helm_release.workspace_connector.values[0]).config.env.AEGIS_DATABASE_URL == "postgresql://acme@localhost:5432/postgres?sslmode=disable&search_path=acme"
+    condition     = yamldecode(local.connector_helm_values[0]).config.env.AEGIS_DATABASE_URL == "postgresql://acme@localhost:5432/postgres?sslmode=disable&search_path=acme"
     error_message = "the DB URL must carry no password and default user and schema to the tenant ID"
   }
   assert {
-    condition     = yamldecode(helm_release.workspace_connector.values[0]).externalSecret.env == { PGPASSWORD = "acme-postgresql-password" }
+    condition     = yamldecode(local.connector_helm_values[0]).externalSecret.env == { PGPASSWORD = "acme-postgresql-password" }
     error_message = "the password secret must default to <tenant>-postgresql-password"
   }
 }
@@ -80,15 +80,15 @@ run "on_overrides_and_microsoft_env" {
   }
   assert {
     condition = alltrue([for k in ["AEGIS_MICROSOFT_CLIENT_STATE", "AEGIS_MICROSOFT_CLIENT_SECRET"] :
-    !contains(keys(yamldecode(helm_release.workspace_connector.values[0]).config.env), k)])
+    !contains(keys(yamldecode(local.connector_helm_values[0]).config.env), k)])
     error_message = "secret-backed keys must leave env, or env would shadow envFrom"
   }
   assert {
-    condition     = yamldecode(helm_release.workspace_connector.values[0]).config.env.AEGIS_DATABASE_URL == "postgresql://acme_x@localhost:5432/postgres?sslmode=disable&search_path=acme_x"
+    condition     = yamldecode(local.connector_helm_values[0]).config.env.AEGIS_DATABASE_URL == "postgresql://acme_x@localhost:5432/postgres?sslmode=disable&search_path=acme_x"
     error_message = "schema must default to user"
   }
   assert {
-    condition = yamldecode(helm_release.workspace_connector.values[0]).externalSecret.env == {
+    condition = yamldecode(local.connector_helm_values[0]).externalSecret.env == {
       PGPASSWORD                    = "acme-x-postgresql-password"
       AEGIS_MICROSOFT_CLIENT_STATE  = "azure-client-state"
       AEGIS_MICROSOFT_CLIENT_SECRET = "azure-client-secret"
@@ -136,7 +136,7 @@ run "password_secret_wins_over_env" {
     }
   }
   assert {
-    condition     = yamldecode(helm_release.workspace_connector.values[0]).externalSecret.env.PGPASSWORD == "acme-postgresql-password"
+    condition     = yamldecode(local.connector_helm_values[0]).externalSecret.env.PGPASSWORD == "acme-postgresql-password"
     error_message = "database.password_secret must not be overridden by env"
   }
 }

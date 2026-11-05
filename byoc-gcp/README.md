@@ -1,11 +1,13 @@
 Aegis workspace-connector can be installed using this terraform module.  
 This module communicates with your e-mail provider to fetch messages & apply quarantine labels in response to classification results from Aegis.
 
-Note: all terraform variables specified here are required, and must be configured as per your environment.
+`byoc-gcp` creates the cloud resources and computes the connector's configuration. The Helm release itself is installed by the `byoc-gcp-release` module next to it, from that configuration. One apply of both produces a running connector.
+
+Note: all terraform variables specified here are required, and must be configured as per your environment. Configure the `google`, `helm` and `kubernetes` providers for the cluster in `gke_cluster_link`.
 
 ```hcl
 module "byoc_aegis" {
-  source = "github.com/aegis-public/terraform-modules.git//byoc-gcp?ref=v0.1.10"
+  source = "github.com/aegis-public/terraform-modules.git//byoc-gcp?ref=v0.5.00"
 
   # fully qualified url for gke cluster (with workload identity federation enabled)
   # gcloud container clusters list --format="value(selfLink)"
@@ -45,7 +47,31 @@ module "byoc_aegis" {
     backfill_query = "newer_than:7d"
   }
 }
+
+module "byoc_release" {
+  source = "github.com/aegis-public/terraform-modules.git//byoc-gcp-release?ref=v0.5.00"
+
+  name          = module.byoc_aegis.helm_release_name
+  namespace     = "aegis-byoc"
+  chart_version = module.byoc_aegis.helm_chart_version
+  values        = module.byoc_aegis.helm_values
+
+  depends_on = [module.byoc_aegis]
+}
 ```
+
+### Upgrading from a version before v0.5.00
+
+Earlier versions installed the release inside `byoc-gcp`. Add the `byoc_release` module above and this block, so terraform moves the existing release in state instead of replacing it:
+
+```hcl
+moved {
+  from = module.byoc_aegis.helm_release.workspace_connector
+  to   = module.byoc_release.helm_release.workspace_connector
+}
+```
+
+The plan then shows one move and one new ConfigMap, `aegis-workspace-connector-values`, which holds the same values the release was installed with.
 
 In addition, to authorize privileged Gmail actions (listing users, fetching emails, modifying labels) you must manually grant Domain-wide Delegation permission to the generated service account from the Google Admin Console.
 

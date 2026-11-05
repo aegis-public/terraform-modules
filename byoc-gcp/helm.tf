@@ -105,21 +105,15 @@ locals {
   # Sub-tenants run as a separate Helm release alongside the parent connector in
   # the same k8s namespace; the release name doubles as the k8s SA name for WIF.
   helm_release_name = local.is_sub_tenant ? "aegis-workspace-connector-${local.sub_tenant_suffix}" : "aegis-workspace-connector"
-}
 
-resource "helm_release" "workspace_connector" {
-  name             = local.helm_release_name
-  repository       = "https://aegis-public.github.io/helm-charts"
-  chart            = "workspace-connector"
-  version          = "0.1.39"
-  namespace        = var.kubernetes_namespace
-  create_namespace = true
-  max_history      = 10
+  connector_chart_version = "0.1.39"
 
-  values = concat(
-    [
-      yamlencode(local.inferred_helm_values),
-      yamlencode({
+  # The release's values, one YAML document per layer. Helm merges them in key
+  # order and a later document wins, so the keys carry the order.
+  connector_values_files = merge(
+    {
+      "00-inferred.yaml" = yamlencode(local.inferred_helm_values)
+      "10-platform.yaml" = yamlencode({
         serviceAccount = {
           workloadIdentity = {
             gcpServiceAccount = local.workspace_connector_sa_email
@@ -128,22 +122,17 @@ resource "helm_release" "workspace_connector" {
         cloudSql = {
           instanceConnectionName = var.database.create ? module.sql_db[0].instance_connection_name : null
         }
-      }),
-    ],
-    var.active ? [] : [yamlencode({
-      replicaCount = 0
-      labels       = { "aegisai.ai/active" = "false" }
-      cronJobs     = { refreshPubsub = { suspend = true } }
-    })],
-    [yamlencode({ serviceExport = { enabled = var.enable_mcs_service_export } })],
-    [yamlencode(var.helm_values)],
+      })
+      "30-service-export.yaml" = yamlencode({ serviceExport = { enabled = var.enable_mcs_service_export } })
+      "40-tenant.yaml"         = yamlencode(var.helm_values)
+    },
+    var.active ? {} : {
+      "20-inactive.yaml" = yamlencode({
+        replicaCount = 0
+        labels       = { "aegisai.ai/active" = "false" }
+        cronJobs     = { refreshPubsub = { suspend = true } }
+      })
+    },
   )
-
-  depends_on = [
-    google_service_account_iam_member.workspace_connector_wif,
-  ]
-
-  lifecycle {
-    prevent_destroy = true
-  }
+  connector_helm_values = [for k in sort(keys(local.connector_values_files)) : local.connector_values_files[k]]
 }
