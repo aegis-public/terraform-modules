@@ -62,7 +62,7 @@ module "byoc_release" {
 
 ### Upgrading from v0.5.00 to v0.6.00
 
-v0.6.00 pins chart 0.1.40 and creates three more objects in the namespace: the ConfigMap `<release>-env-vars` holding the connector's plain env, the ExternalSecret `<release>-env` (when `external_secrets` is set) and the Ingresses in `helm_values.ingress` and `helm_values.extraIngresses`. On an existing install the chart already created the ExternalSecret and the Ingresses, so adopt them with import blocks before the first apply, or the apply fails on objects that exist:
+v0.6.00 pins chart 0.1.41 and creates three more objects in the namespace: the ConfigMap `<release>-env-vars` holding the connector's plain env, the ExternalSecret `<release>-env` (when `external_secrets` is set) and the Ingresses in `helm_values.ingress` and `helm_values.extraIngresses`. On an existing install the chart already created the ExternalSecret and the Ingresses, so adopt them with import blocks before the first apply, or the apply fails on objects that exist:
 
 ```hcl
 import {
@@ -75,7 +75,7 @@ import {
 }
 ```
 
-Then upgrade the release to chart 0.1.40 with `env_delivery` at its default, `inline`: the pod template is unchanged and the ExternalSecret and the Ingresses gain `helm.sh/resource-policy: keep`. Only then set `env_delivery = "configmap"`, apply, and upgrade the release once more: the pod now reads its env from `<release>-env-vars` through `envFrom`, stakater Reloader (which the cluster must run) restarts it when that ConfigMap or the Secret changes, and the chart stops rendering the ExternalSecret and the Ingresses, which stay in place for this module to own. Upgrading with `configmap` set before the `keep` annotation is on the live objects deletes the ExternalSecret, and the Secret it owns with it.
+Then upgrade the release to chart 0.1.41 with `env_delivery` at its default, `inline`: the pod template is unchanged and the ExternalSecret and the Ingresses gain `helm.sh/resource-policy: keep`. Only then set `env_delivery = "configmap"`, apply, and upgrade the release once more: the pod now reads its env from `<release>-env-vars` through `envFrom`, stakater Reloader (which the cluster must run) restarts it when that ConfigMap or the Secret changes, and the chart stops rendering the ExternalSecret and the Ingresses, which stay in place for this module to own. Upgrading with `configmap` set before the `keep` annotation is on the live objects deletes the ExternalSecret, and the Secret it owns with it.
 
 ### Upgrading from a version before v0.5.00
 
