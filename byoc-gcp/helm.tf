@@ -82,19 +82,37 @@ locals {
     { PGPASSWORD = local.external_secret_db.password_secret },
   )
 
+  # The plain env: inferred values and the tenant's own, minus secret-backed keys,
+  # which envFrom loses to on a shared name. Nulls stay here so inline mode renders
+  # what it always has (helm drops them); the ConfigMap filters them.
+  connector_plain_env = {
+    for name, value in merge(local.inferred_env_vars, var.app_config.env) : name => value
+    if !contains(keys(local.external_secret_env), name)
+  }
+  env_configmap_name = "${local.helm_release_name}-env-vars"
+
   inferred_helm_values = merge(
     {
       config = {
-        # envFrom loses to env on a shared name, so secret-backed keys leave env.
-        env = {
-          for name, value in merge(local.inferred_env_vars, var.app_config.env) : name => value
-          if !contains(keys(local.external_secret_env), name)
-        }
+        env = var.env_delivery == "inline" ? local.connector_plain_env : {}
+      }
+      envConfigMap = {
+        enabled = var.env_delivery == "configmap"
+        name    = local.env_configmap_name
+      }
+      reloader = {
+        enabled = var.env_delivery == "configmap"
+      }
+      # In configmap mode this module owns the ExternalSecret and the Ingresses,
+      # so the chart renders neither.
+      ingress = {
+        render = var.env_delivery == "inline"
       }
     },
     var.external_secrets == null ? {} : {
       externalSecret = {
         enabled = true
+        render  = var.env_delivery == "inline"
         env     = local.external_secret_env
       }
     },
@@ -106,7 +124,7 @@ locals {
   # the same k8s namespace; the release name doubles as the k8s SA name for WIF.
   helm_release_name = local.is_sub_tenant ? "aegis-workspace-connector-${local.sub_tenant_suffix}" : "aegis-workspace-connector"
 
-  connector_chart_version = "0.1.39"
+  connector_chart_version = "0.1.40"
 
   # The release's values, one YAML document per layer. Helm merges them in key
   # order and a later document wins, so the keys carry the order.
