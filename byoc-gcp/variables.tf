@@ -248,3 +248,25 @@ variable "manage_namespace" {
   type        = bool
   default     = false
 }
+
+variable "env_delivery" {
+  description = <<-EOT
+    How the connector's plain env reaches the pod. "inline" (default) renders it into the
+    Deployment's pod template through the chart's config.env, so a change needs a helm upgrade.
+    "configmap" leaves config.env empty and the pod reads <release>-env-vars through envFrom,
+    so a change restarts the pod through Reloader with no helm upgrade; the chart then also
+    stops rendering the ExternalSecret and the Ingresses, which this module creates in both
+    modes. Needs external_secrets: a database URL with a generated password must not land
+    in a ConfigMap.
+  EOT
+  type        = string
+  default     = "inline"
+  validation {
+    condition     = contains(["inline", "configmap"], var.env_delivery)
+    error_message = "env_delivery must be inline or configmap"
+  }
+  validation {
+    condition     = var.env_delivery == "inline" || var.external_secrets != null
+    error_message = "env_delivery = configmap needs external_secrets, so no secret lands in the env ConfigMap"
+  }
+}

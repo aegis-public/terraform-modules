@@ -38,8 +38,12 @@ variables {
 run "off_is_unchanged" {
   command = apply
   assert {
-    condition     = yamldecode(local.connector_helm_values[0]) == { config = { env = merge(local.inferred_env_vars, var.app_config.env) } }
-    error_message = "without external_secrets the Helm values must be exactly today's"
+    condition     = yamldecode(local.connector_helm_values[0]).config == { env = merge(local.inferred_env_vars, var.app_config.env) }
+    error_message = "without external_secrets the inline env must be exactly today's"
+  }
+  assert {
+    condition     = !contains(keys(yamldecode(local.connector_helm_values[0])), "externalSecret")
+    error_message = "without external_secrets the chart gets no externalSecret values"
   }
   assert {
     condition     = yamldecode(local.connector_helm_values[0]).config.env.AEGIS_DATABASE_URL == var.database.url

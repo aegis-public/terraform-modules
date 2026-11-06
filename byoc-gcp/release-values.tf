@@ -28,7 +28,13 @@ resource "kubernetes_config_map_v1" "connector_values" {
     }
   }
 
-  data = merge(local.connector_values_files, { "chart-version" = local.connector_chart_version })
+  # chart-version and env-delivery are not values documents: deploy-fleet.sh reads
+  # the first, and the CI message reads the second to say whether a values change
+  # still needs a helm upgrade.
+  data = merge(local.connector_values_files, {
+    "chart-version" = local.connector_chart_version
+    "env-delivery"  = var.env_delivery
+  })
 
   depends_on = [
     kubernetes_namespace_v1.connector,
