@@ -124,7 +124,7 @@ locals {
   # the same k8s namespace; the release name doubles as the k8s SA name for WIF.
   helm_release_name = local.is_sub_tenant ? "aegis-workspace-connector-${local.sub_tenant_suffix}" : "aegis-workspace-connector"
 
-  connector_chart_version = "0.1.41"
+  connector_chart_version = "0.1.43"
 
   # The release's values, one YAML document per layer. Helm merges them in key
   # order and a later document wins, so the keys carry the order.

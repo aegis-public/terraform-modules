@@ -69,7 +69,7 @@ run "inline_renders_what_0_5_rendered_plus_the_switches" {
     error_message = "inline mode keeps the chart rendering the ExternalSecret and the Ingresses"
   }
   assert {
-    condition     = kubernetes_config_map_v1.connector_values.data["env-delivery"] == "inline" && kubernetes_config_map_v1.connector_values.data["chart-version"] == "0.1.41"
+    condition     = kubernetes_config_map_v1.connector_values.data["env-delivery"] == "inline" && kubernetes_config_map_v1.connector_values.data["chart-version"] == "0.1.43"
     error_message = "the values ConfigMap carries the mode and the chart version"
   }
 }
