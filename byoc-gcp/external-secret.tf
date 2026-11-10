@@ -7,6 +7,13 @@
 resource "kubernetes_manifest" "external_secret" {
   count = var.external_secrets == null ? 0 : 1
 
+  # An adopted object still carries the chart's field manager on .spec, and the
+  # API refuses the first change to spec.data as a conflict with it. Taking the
+  # fields is safe: the chart stops rendering this object and never writes it again.
+  field_manager {
+    force_conflicts = true
+  }
+
   manifest = {
     apiVersion = "external-secrets.io/v1"
     kind       = "ExternalSecret"
