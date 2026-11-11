@@ -77,6 +77,10 @@ import {
 
 Then upgrade the release to chart 0.1.43 with `env_delivery` at its default, `inline`: the pod template is unchanged and the ExternalSecret and the Ingresses gain `helm.sh/resource-policy: keep`. Only then set `env_delivery = "configmap"`, apply, and upgrade the release once more: the pod now reads its env from `<release>-env-vars` through `envFrom`, stakater Reloader (which the cluster must run) restarts it when that ConfigMap or the Secret changes, and the chart stops rendering the ExternalSecret and the Ingresses, which stay in place for this module to own. Upgrading with `configmap` set before the `keep` annotation is on the live objects deletes the ExternalSecret, and the Secret it owns with it.
 
+### Upgrading from v0.6.00 or v0.6.01 to v0.6.02
+
+v0.6.02 changes one values document and no object. In configmap mode the tenant document `40-tenant.yaml` in `<release>-values` no longer carries `helm_values.ingress` and `helm_values.extraIngresses`: this module creates the Ingresses from those keys and the chart renders none, so the document holds only the values the chart reads. The Ingress objects, the env ConfigMap and the ExternalSecret are unchanged. The apply rewrites the values ConfigMap once; a release upgrade with the new document renders the same manifests as before.
+
 ### Upgrading from a version before v0.5.00
 
 Earlier versions installed the release inside `byoc-gcp`. Add the `byoc_release` module above and this block, so terraform moves the existing release in state instead of replacing it:
