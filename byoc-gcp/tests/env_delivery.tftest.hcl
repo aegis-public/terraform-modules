@@ -69,6 +69,10 @@ run "inline_renders_what_0_5_rendered_plus_the_switches" {
     error_message = "inline mode keeps the chart rendering the ExternalSecret and the Ingresses"
   }
   assert {
+    condition     = contains(keys(yamldecode(local.connector_helm_values[length(local.connector_helm_values) - 1])), "ingress") && contains(keys(yamldecode(local.connector_helm_values[length(local.connector_helm_values) - 1])), "extraIngresses")
+    error_message = "inline mode keeps the tenant's ingress values in the tenant document, where the chart reads them"
+  }
+  assert {
     condition     = kubernetes_config_map_v1.connector_values.data["env-delivery"] == "inline" && kubernetes_config_map_v1.connector_values.data["chart-version"] == "0.1.43"
     error_message = "the values ConfigMap carries the mode and the chart version"
   }
@@ -110,6 +114,14 @@ run "configmap_mode_moves_the_env_and_the_rendering" {
   assert {
     condition     = !yamldecode(local.connector_helm_values[0]).ingress.render && !yamldecode(local.connector_helm_values[0]).externalSecret.render && yamldecode(local.connector_helm_values[0]).externalSecret.enabled
     error_message = "configmap mode stops the chart rendering the ExternalSecret and the Ingresses but keeps the Secret's envFrom"
+  }
+  assert {
+    condition     = !contains(keys(yamldecode(local.connector_helm_values[length(local.connector_helm_values) - 1])), "ingress") && !contains(keys(yamldecode(local.connector_helm_values[length(local.connector_helm_values) - 1])), "extraIngresses")
+    error_message = "configmap mode leaves the tenant's ingress values out of the tenant document: the chart renders no Ingress from them"
+  }
+  assert {
+    condition     = length(kubernetes_ingress_v1.connector) == 1 && kubernetes_ingress_v1.extra["aegis-workspace-connector-restore"].spec[0].rule[0].http[0].path[0].path == "/acme/(restore.*)"
+    error_message = "configmap mode still creates the Ingresses from helm_values"
   }
   assert {
     condition     = kubernetes_config_map_v1.connector_values.data["env-delivery"] == "configmap"

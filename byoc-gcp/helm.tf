@@ -126,6 +126,15 @@ locals {
 
   connector_chart_version = "0.1.43"
 
+  # In configmap mode this module creates the Ingresses from helm_values.ingress and
+  # helm_values.extraIngresses (ingress.tf) and the chart renders none, so the tenant
+  # document carries only the values the chart reads. A change to the document then
+  # always means a change the release would render.
+  tenant_helm_values = {
+    for k, v in var.helm_values : k => v
+    if !(var.env_delivery == "configmap" && contains(["ingress", "extraIngresses"], k))
+  }
+
   # The release's values, one YAML document per layer. Helm merges them in key
   # order and a later document wins, so the keys carry the order.
   connector_values_files = merge(
@@ -142,7 +151,7 @@ locals {
         }
       })
       "30-service-export.yaml" = yamlencode({ serviceExport = { enabled = var.enable_mcs_service_export } })
-      "40-tenant.yaml"         = yamlencode(var.helm_values)
+      "40-tenant.yaml"         = yamlencode(local.tenant_helm_values)
     },
     var.active ? {} : {
       "20-inactive.yaml" = yamlencode({
